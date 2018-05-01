@@ -4,7 +4,7 @@ Install and configure for Ubuntu
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This section describes how to install and configure the Ansible Networking ML2 Driver
-service for Ubuntu 14.04 (LTS).
+for Ubuntu 14.04 (LTS).
 
 .. include:: common_prerequisites.rst
 
@@ -17,15 +17,15 @@ Install and configure components
 
       # apt-get update
 
-      # apt-get install
+      # apt-get install networking-ansible
 
 .. include:: common_configure.rst
 
 Finalize installation
 ---------------------
 
-Restart the Ansible Networking ML2 Driver services:
+Restart the neutron-server service:
 
 .. code-block:: console
 
-   # service openstack-networking_ansible-api restart
+   # service neutron-server restart

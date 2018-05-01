@@ -4,7 +4,7 @@
 Install and configure for openSUSE and SUSE Linux Enterprise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This section describes how to install and configure the Ansible Networking ML2 Driver service
+This section describes how to install and configure the Ansible Networking ML2 Driver
 for openSUSE Leap 42.1 and SUSE Linux Enterprise Server 12 SP1.
 
 .. include:: common_prerequisites.rst
@@ -16,7 +16,7 @@ Install and configure components
 
    .. code-block:: console
 
-      # zypper --quiet --non-interactive install
+      # zypper --quiet --non-interactive install networking-ansible
 
 .. include:: common_configure.rst
 
@@ -24,11 +24,8 @@ Install and configure components
 Finalize installation
 ---------------------
 
-Start the Ansible Networking ML2 Driver services and configure them to start when
-the system boots:
+Restart the neutron-server service:
 
 .. code-block:: console
 
-   # systemctl enable openstack-networking_ansible-api.service
-
-   # systemctl start openstack-networking_ansible-api.service
+   # systemctl restart neutron-server.service

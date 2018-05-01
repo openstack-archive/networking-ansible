@@ -4,7 +4,7 @@ Install and configure for Red Hat Enterprise Linux and CentOS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-This section describes how to install and configure the Ansible Networking ML2 Driver service
+This section describes how to install and configure the Ansible Networking ML2 Driver
 for Red Hat Enterprise Linux 7 and CentOS 7.
 
 .. include:: common_prerequisites.rst
@@ -16,18 +16,15 @@ Install and configure components
 
    .. code-block:: console
 
-      # yum install
+      # yum install networking-ansible
 
 .. include:: common_configure.rst
 
 Finalize installation
 ---------------------
 
-Start the Ansible Networking ML2 Driver services and configure them to start when
-the system boots:
+Restart the neutron-server service:
 
 .. code-block:: console
 
-   # systemctl enable openstack-networking_ansible-api.service
-
-   # systemctl start openstack-networking_ansible-api.service
+   # systemctl restart neutron-server.service

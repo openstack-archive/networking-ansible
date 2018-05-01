@@ -1,10 +1,12 @@
-2. Edit the ``/etc/networking_ansible/networking_ansible.conf`` file and complete the following
+2. Edit the ``/etc/neutron/plugins/ml2/ml2_conf.ini`` file and complete the following
    actions:
 
-   * In the ``[database]`` section, configure database access:
+   * Create a section for each host with a section name prefixed by ``ansible:``:
 
      .. code-block:: ini
 
-        [database]
-        ...
-        connection = mysql+pymysql://networking_ansible:NETWORKING_ANSIBLE_DBPASS@controller/networking_ansible
+        [ansible:myhostname]
+        ansible_connection=netconf
+        ansible_host=10.10.2.250
+        ansible_user=ansible
+        ansible_ssh_pass=password

@@ -9,16 +9,12 @@ Verify operation of the Ansible Networking ML2 Driver service.
 
    Perform these commands on the controller node.
 
-#. Source the ``admin`` project credentials to gain access to
-   admin-only CLI commands:
+#. Grep the neutron logs for ansible and confirm the driver has been registered and configured.
+   root access CLI commands:
 
    .. code-block:: console
 
-      $ . admin-openrc
-
-#. List service components to verify successful launch and registration
-   of each process:
-
-   .. code-block:: console
-
-      $ openstack ansible networking ml2 driver service list
+      $ grep ansible /var/log/neutron/server.log
+      INFO neutron.plugins.ml2.managers [-] Configured mechanism driver names: ['ansible']
+      INFO neutron.plugins.ml2.managers [-] Loaded mechanism driver names: ['ansible']
+      INFO neutron.plugins.ml2.managers [-] Registered mechanism drivers: ['ansible']

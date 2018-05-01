@@ -4,7 +4,7 @@ Install and configure
 ~~~~~~~~~~~~~~~~~~~~~
 
 This section describes how to install and configure the
-Ansible Networking ML2 Driver service, code-named networking_ansible, on the controller node.
+Ansible Networking ML2 Driver, code-named networking_ansible, on the controller node.
 
 This section assumes that you already have a working OpenStack
 environment with at least the following components installed:
