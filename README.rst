@@ -4,9 +4,10 @@ networking-ansible
 
 Ansible Networking ML2 Driver
 
-Please fill here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+Networking-Ansible is a Neutron ML2 driver that abstracts the interaction with
+switch hardware to Ansible Networking. This driver may not be tested with all
+the modules included with Ansible Networking. In theory it should work with any
+switch that has compatible modules included with Ansible Networking.
 
 * Free software: Apache license
 * Documentation: https://docs.openstack.org/networking-ansible/latest
