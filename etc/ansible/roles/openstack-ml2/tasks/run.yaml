@@ -1,0 +1,10 @@
+---
+- name: include device role specific tasks
+  include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ml2_resource }}.yaml"
+      paths:
+        - "{{ playbook_dir }}/providers/{{ ansible_network_os }}"
+        - "/etc/ansible/openstack_ml2/providers/{{ ansible_network_os }}"
+        - "{{ role_path }}/providers/{{ ansible_network_os }}"

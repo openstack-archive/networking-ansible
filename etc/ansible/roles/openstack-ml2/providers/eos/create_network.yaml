@@ -1,0 +1,9 @@
+---
+- name: "eos: run create_network using network_cli"
+  eos_config:
+    lines:
+      - "name {{ ml2_segmentation_name }}"
+    parents:
+      - "vlan {{ ml2_segmentation_id }}"
+  connection: network_cli
+

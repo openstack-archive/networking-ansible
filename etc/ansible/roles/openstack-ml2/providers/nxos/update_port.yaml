@@ -1,0 +1,53 @@
+---
+- name: "nxos: get current status of the port"
+  nxos_command:
+    commands:
+      - "show interface {{ ml2_port_name }} switchport | json"
+      - "show interface {{ ml2_port_name }} | json"
+      - "show running-config"
+  register: output
+
+- name: "nxos: set port facts"
+  set_fact:
+    switchport: "{{ output.stdout[0].TABLE_interface.ROW_interface }}"
+    interface: "{{ output.stdout[1].TABLE_interface.ROW_interface }}"
+
+- name: "nxos: port is configured as routed"
+  block:
+    - name: "nxos: reset interface to defaults"
+      nxos_config:
+        lines: "default interface {{ ml2_port_name }}"
+
+    - name: "nxos: build port configuration"
+      nxos_config:
+        lines:
+          - "description {{ ml2_port_description }}"
+          - "switchport"
+          - "switchport access vlan {{ ml2_segmentation_id }}"
+          - "no shutdown"
+        parents: ["interface {{ ml2_port_name }}"]
+        running_config: "{{ output.stdout[2] }}"
+  when: switchport.switchport == 'Disabled'
+
+- name: "nxos: port is configured as switchport"
+  block:
+    - name: "nxos: set the switchport mode to access"
+      nxos_config:
+        lines: "switchport mode access"
+        parents: ["interface {{ ml2_port_name }}"]
+      when: switchport.oper_mode != 'access'
+
+    - name: "nxos: configure port settings"
+      nxos_config:
+        lines:
+          - "description {{ ml2_port_description }}"
+          - "switchport access vlan {{ ml2_segmentation_id }}"
+        parents: ["interface {{ ml2_port_name }}"]
+        running_config: "{{ output.stdout[2] }}"
+
+    - name: "nxos: administratively enable the port"
+      nxos_config:
+        lines: "no shutdown"
+        parents: ["interface {{ ml2_port_name }}"]
+      when: interface.admin_state == 'down'
+  when: switchport.switchport == 'Enabled'

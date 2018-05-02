@@ -1,0 +1,17 @@
+---
+# defaults file for openstack-ml2
+#
+
+# enable or disable the check for netconf on a junos device.
+#
+ml2_settings_junos_enable_netconf: "{{ junos_enable_netconf }}"
+
+# params to implement ml2 network resource
+#
+ml2_segmentation_id: "{{ segmentation_id }}"
+ml2_segmentation_name: "{{ segmentation_name }}"
+
+# params to implement ml2 port resource
+#
+ml2_port_name: "{{ port_name }}"
+ml2_port_description: "{{ port_description }}"
