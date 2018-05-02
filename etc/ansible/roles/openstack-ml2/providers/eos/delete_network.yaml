@@ -1,0 +1,6 @@
+---
+- name: "eos: run delete_network using network_cli"
+  eos_config:
+    lines: "no vlan {{ ml2_segmentation_id }}"
+  connection: network_cli
+

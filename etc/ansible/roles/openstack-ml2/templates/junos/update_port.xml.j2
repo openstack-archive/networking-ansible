@@ -1,0 +1,21 @@
+<config>
+    <configuration>
+        <interfaces>
+            <interface>
+                <name>{{ ml2_port_name }}</name>
+                <unit>
+                    <name>0</name>
+                    <description>{{ ml2_port_description }}</description>
+                    <family>
+                        <ethernet-switching>
+                            <interface-mode>access</interface-mode>
+                            <vlan>
+                                <members>{{ ml2_segmentation_id }}</members>
+                            </vlan>
+                        </ethernet-switching>
+                    </family>
+                </unit>
+            </interface>
+        </interfaces>
+    </configuration>
+</config>

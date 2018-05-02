@@ -1,0 +1,22 @@
+---
+- name: "junos: check netconf service"
+  block:
+    - name: "junos: enable netconf if not already enabled"
+      junos_netconf:
+        state: present
+
+    - name: "junos: close network_cli connection as its no longer needed"
+      meta: reset_connection
+
+  connection: network_cli
+  when: ml2_settings_junos_enable_netconf
+
+- name: "junos: set netconf template"
+  set_fact:
+    ml2_junos_netconf_template: "templates/junos/{{ ml2_resource }}.xml.j2"
+
+- name: "junos: send configuration to device"
+  netconf_config:
+    xml: "{{ lookup('template', ml2_junos_netconf_template) }}"
+  connection: netconf
+
