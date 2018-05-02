@@ -1,0 +1,19 @@
+---
+- name: "eos: get interfaces"
+  eos_command:
+    commands: "show interfaces | json"
+  register: output
+
+- name: "eos: verify port exists"
+  fail:
+    msg: "port {{ ml2_port_name }} does not exist on this device"
+  when: ml2_port_name not in output.stdout[0].interfaces | list
+
+- name: "eos: remove port configuration"
+  eos_config:
+    lines: "default interface {{ ml2_port_name }}"
+
+- name: "eos: administratively disable the port"
+  eos_config:
+    lines: "shutdown"
+    parents: ["interface {{ ml2_port_name }}"]

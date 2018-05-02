@@ -1,0 +1,3 @@
+---
+- name: "junos: run create_network using netconf"
+  include_tasks: netconf.yaml
