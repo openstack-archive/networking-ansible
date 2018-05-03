@@ -154,7 +154,15 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         state. It is up to the mechanism driver to ignore state or
         state changes that it does not know or care about.
         """
-        LOG.info("Ansible ML2 driver: update_port_postcommit")
+        if self._is_port_bound(context.current):
+            self._vlan_access_port('assign', context.current,
+                                   context.network.current)
+        elif self._is_port_bound(context.original):
+            # The port has been unbound. This will cause the local link
+            # information to be lost, so remove the port from the network on
+            # the switch now while we have the required information.
+            self._vlan_access_port('remove', context.original,
+                                             context.network.current)
 
 
     def delete_port_postcommit(self, context):
@@ -167,7 +175,10 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         expected, and will not prevent the resource from being
         deleted.
         """
-        LOG.info("Ansible ML2 driver: delete_port_postcommit")
+        if self._is_port_bound(context.current):
+            self._vlan_access_port('remove', context.current,
+                                             context.network.current)
+        
 
     def bind_port(self, context):
         """Attempt to bind a port.
@@ -207,3 +218,83 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         can use with ports.
         """
         LOG.info("Ansible ML2 driver: bind_port")
+
+    @staticmethod
+    def _is_port_bound(port):
+        """Return whether a port is bound by this driver.
+        Ports bound by this driver have their VIF type set to 'other'.
+        :param port: The port to check
+        :returns: Whether the port is bound by the NGS driver
+        """
+        if not GenericSwitchDriver._is_port_supported(port):
+            return False
+
+        vif_type = port[portbindings.VIF_TYPE]
+        return vif_type == portbindings.VIF_TYPE_OTHER
+
+    def _vlan_access_port(self, assign_remove, port, network):
+        """Unplug a port from a network.
+        If the configuration required to unplug the port is not present
+        (e.g. local link information), the port will not be unplugged and no
+        exception will be raised.
+        :param assign_remove: 'assign' or 'remove'
+        :param port: The port to unplug
+        :param network: The network from which to unplug the port
+        """
+        state = {'assign': 'present',
+                 'remove': 'absent'}
+        debug_msg = {'assign': 'Plugging in port {switch_port} on '
+                               '{switch_name} to vlan: {segmentation_id}',
+                     'remove': 'Unplugging port {switch_port} on '
+                               '{switch_name} from vlan: {segmentation_id}'}
+        info_msg = {'assign': 'Port {switch_port} has been plugged into '
+                              'network {net_id} on device {switch_name}',
+                    'remove': 'Port {switch_port} has been unplugged from '
+                              'network {net_id} on device {switch_name}'}
+        error_msg = {'assign': 'Failed to unplug port {switch_port} on device:'
+                               ' {switch} from network {net_id} reason: {exc}',
+                     'remove': 'Failed to plug in port {switch_port} on '
+                               'device: {switch} from network {net_id} '
+                               'reason: {exc}'}
+
+        network = context.network.current
+        provider_type = network['provider:network_type']
+        segmentation_id = network['provider:segmentation_id']
+        physnet = network['provider:physical_network']
+
+        local_link_info = port['binding:profile'].get('local_link_information')
+        if not local_link_info:
+            return
+        switch_name = local_link_info[0].get('switch_info')
+        switch_id = local_link_info[0].get('switch_id')
+        switch_port = local_link_info[0].get('switch_port')
+        try:
+            task = {'name': '{a_r} access vlan id {seg_id}'.format(
+                                a_r=assign_remove.capitalize(),
+                                seg_id=segmentation_id),
+                    # TODO: This is hard coded for juniper because
+                    #       that was the initial vm we got running.
+                    'junos_l2_interface': {
+                        'name': switch_port,
+                        'description': 'interface-access',
+                        'mode': 'access',
+                        'access_vlan': 'vlan%s' % segmentation_id,
+                        'active': True,
+                        'state': state[assign_remove]}
+                   }
+            LOG.debug(dbug_msg[assign_remove].format(
+                         switch_port=switch_port,
+                         switch_name=switch_name,
+                         segmentation_id=segmentation_id))
+            result = self.run_task(network, host_name, task) 
+            LOG.info(info_msg[assign_remove].format(
+                         switch_port=port['id'],
+                         net_id=network['id'],
+                         switch_name=switch_name))
+        except Exception as e:
+            LOG.error(error_msg[assign_remove].format(
+                          switch_port=port['id'],
+                          net_id=network['id'],
+                          switch_name=switch_name,
+                          exc=e))
+            raise e
