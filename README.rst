@@ -12,7 +12,7 @@ switch that has compatible modules included with Ansible Networking.
 * Free software: Apache license
 * Documentation: https://docs.openstack.org/networking-ansible/latest
 * Source: https://git.openstack.org/cgit/openstack/networking-ansible
-* Bugs: https://bugs.launchpad.net/networking-ansible
+* Bugs: https://storyboard.openstack.org/#!/project/986
 
 Features
 --------
