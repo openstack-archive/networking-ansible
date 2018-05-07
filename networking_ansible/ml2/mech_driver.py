@@ -15,7 +15,9 @@
 
 import ansible_runner
 
+from neutron.db import provisioning_blocks
 from neutron_lib.api.definitions import portbindings
+from neutron_lib.callbacks import resources
 from neutron_lib.plugins.ml2 import api
 from oslo_log import log as logging
 
@@ -23,6 +25,8 @@ from networking_ansible import config
 from networking_ansible.trunk import trunk_driver
 
 LOG = logging.getLogger(__name__)
+
+ANSIBLE_NETWORKING_ENTITY = 'ANSIBLENETWORKING'
 
 
 class AnsibleMechanismDriver(api.MechanismDriver):
@@ -46,6 +50,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         playbook = [{
             'name': 'Openstack networking-ansible playbook',
             'hosts': host_name,
+            'gather_facts': 'no',
             'tasks': [task]
         }]
 
@@ -54,9 +59,8 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                                     inventory=self.inventory)
         failures = result.stats['failures']
         if failures:
-            # TODO(radez): Should this be a custom error rather than
-            # Exception?
-            raise Exception(failures)
+            # TODO(radez): Create a custom error rather than Exception
+            raise Exception(' '.join(result.stdout))
         return result
 
     def create_network_postcommit(self, context):
@@ -64,6 +68,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
         :param context: NetworkContext instance describing the new
         network.
+
         Called after the transaction commits. Call can block, though
         will block the entire process so care should be taken to not
         drastically affect performance. Raising an exception will
@@ -112,6 +117,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
         :param context: NetworkContext instance describing the current
         state of the network, prior to the call to delete it.
+
         Called after the transaction commits. Call can block, though
         will block the entire process so care should be taken to not
         drastically affect performance. Runtime errors are not
@@ -158,6 +164,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         :param context: PortContext instance describing the new
         state of the port, as well as the original state prior
         to the update_port call.
+
         Called after the transaction completes. Call can block, though
         will block the entire process so care should be taken to not
         drastically affect performance.  Raising an exception will
@@ -168,8 +175,9 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         """
         port = context.network.current
         if self._is_port_bound(context.current):
-            self._vlan_access_port('assign', context.current,
-                                   context.network.current)
+            provisioning_blocks.provisioning_complete(
+                context._plugin_context, port['id'], resources.PORT,
+                ANSIBLE_NETWORKING_ENTITY)
         elif self._is_port_bound(context.original):
             # The port has been unbound. This will cause the local link
             # information to be lost, so remove the port from the network on
@@ -181,6 +189,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
         :param context: PortContext instance describing the current
         state of the port, prior to the call to delete it.
+
         Called after the transaction completes. Call can block, though
         will block the entire process so care should be taken to not
         drastically affect performance.  Runtime errors are not
@@ -196,6 +205,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         """Attempt to bind a port.
 
         :param context: PortContext instance describing the port
+
         This method is called outside any transaction to attempt to
         establish a port binding using this mechanism driver. Bindings
         may be created at each of multiple levels of a hierarchical
@@ -214,6 +224,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         with the binding details. If it can partially bind the port,
         it must call context.continue_binding with the network
         segments to be used to bind at the next lower level.
+
         If the binding results are committed after bind_port returns,
         they will be seen by all mechanism drivers as
         update_port_precommit and update_port_postcommit calls. But if
@@ -225,12 +236,54 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         drivers should avoid making persistent state changes in
         bind_port, or else must ensure that such state changes are
         eventually cleaned up.
+
         Implementing this method explicitly declares the mechanism
         driver as having the intention to bind ports. This is inspected
         by the QoS service to identify the available QoS rules you
         can use with ports.
         """
-        LOG.info("Ansible ML2 driver: bind_port")
+        port = context.current
+        binding_profile = port['binding:profile']
+        local_link_info = binding_profile.get('local_link_information')
+        if self._is_port_supported(port) and local_link_info:
+            switch_name = local_link_info[0].get('switch_info')
+            switch_port = local_link_info[0].get('port_id')
+
+            network = context.network.current
+            # If segmentation ID is None, vlan will be set to 1
+            segmentation_id = network['provider:segmentation_id'] or '1'
+            segments = context.segments_to_bind
+
+            provisioning_blocks.add_provisioning_component(
+                context._plugin_context, port['id'], resources.PORT,
+                ANSIBLE_NETWORKING_ENTITY)
+            LOG.debug("Putting port {port} on {switch_name} to vlan: "
+                      "{segmentation_id}".format(
+                          port=switch_port,
+                          switch_name=switch_name,
+                          segmentation_id=segmentation_id))
+            # Assign port to network
+            self._vlan_access_port('assign', context.current,
+                                   context.network.current)
+            LOG.info("Successfully bound port {port_id} in segment "
+                     "{segment_id} on host {host}".format(
+                         port_id=port['id'],
+                         host=switch_name,
+                         segment_id=segmentation_id))
+            context.set_binding(segments[0][api.ID],
+                                portbindings.VIF_TYPE_OTHER, {})
+
+    @staticmethod
+    def _is_port_supported(port):
+        """Return whether a port is supported by this driver.
+
+        :param port: The port to check
+        :returns: Whether the port is supported by the NGS driver
+
+        Ports supported by this driver have a VNIC type of 'baremetal'.
+        """
+        vnic_type = port[portbindings.VNIC_TYPE]
+        return vnic_type == portbindings.VNIC_BAREMETAL
 
     @staticmethod
     def _is_port_bound(port):
@@ -241,15 +294,15 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         :param port: The port to check
         :returns: Whether the port is bound by the NGS driver
         """
-        # TODO(radez): impliment this call?
-        # if not GenericSwitchDriver._is_port_supported(port):
-        #     return False
+        # TODO(radez): do something with this
+        # if not AnsibleMechanismDriver._is_port_supported(port):
+        #    return False
 
         vif_type = port[portbindings.VIF_TYPE]
         return vif_type == portbindings.VIF_TYPE_OTHER
 
     def _vlan_access_port(self, assign_remove, port, network):
-        """Unplug a port from a network.
+        """Assign an access port to a vlan.
 
         If the configuration required to unplug the port is not present
         (e.g. local link information), the port will not be unplugged and no
@@ -265,24 +318,31 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                                '{switch_name} to vlan: {segmentation_id}',
                      'remove': 'Unplugging port {switch_port} on '
                                '{switch_name} from vlan: {segmentation_id}'}
-        info_msg = {'assign': 'Port {switch_port} has been plugged into '
+        info_msg = {'assign': 'Port {neutron_port} has been plugged into '
                               'network {net_id} on device {switch_name}',
-                    'remove': 'Port {switch_port} has been unplugged from '
+                    'remove': 'Port {neutron_port} has been unplugged from '
                               'network {net_id} on device {switch_name}'}
-        error_msg = {'assign': 'Failed to unplug port {switch_port} on device:'
-                               ' {switch} from network {net_id} reason: {exc}',
-                     'remove': 'Failed to plug in port {switch_port} on '
-                               'device: {switch} from network {net_id} '
+        error_msg = {'assign': 'Failed to unplug port {neutron_port} on '
+                               'device: {switch_name} from network {net_id} '
+                               'reason: {exc}',
+                     'remove': 'Failed to plug in port {neutron_port} on '
+                               'device: {switch_name} from network {net_id} '
                                'reason: {exc}'}
 
-        segmentation_id = network['provider:segmentation_id']
+        # If segmentation ID is None, set vlan 1
+        segmentation_id = network['provider:segmentation_id'] or '1'
 
         local_link_info = port['binding:profile'].get('local_link_information')
         if not local_link_info:
             return
         switch_name = local_link_info[0].get('switch_info')
-        switch_port = local_link_info[0].get('switch_port')
+        switch_port = local_link_info[0].get('port_id')
         try:
+            if segmentation_id == '1':
+                vlan_name = 'default'
+            else:
+                vlan_name = 'vlan%s' % segmentation_id
+
             task = {
                 'name': '{a_r} access vlan id {seg_id}'.format(
                     a_r=assign_remove.capitalize(),
@@ -293,7 +353,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                     'name': switch_port,
                     'description': 'interface-access',
                     'mode': 'access',
-                    'access_vlan': 'vlan%s' % segmentation_id,
+                    'access_vlan': vlan_name,
                     'active': True,
                     'state': state[assign_remove]
                 }
@@ -305,12 +365,12 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                 segmentation_id=segmentation_id))
             self.run_task(network, switch_name, task)
             LOG.info(info_msg[assign_remove].format(
-                switch_port=port['id'],
+                neutron_port=port['id'],
                 net_id=network['id'],
                 switch_name=switch_name))
         except Exception as e:
             LOG.error(error_msg[assign_remove].format(
-                switch_port=port['id'],
+                neutron_port=port['id'],
                 net_id=network['id'],
                 switch_name=switch_name,
                 exc=e))
