@@ -23,9 +23,10 @@ from networking_ansible.trunk import trunk_driver
 
 LOG = logging.getLogger(__name__)
 
+
 class AnsibleMechanismDriver(api.MechanismDriver):
-    """
-    ML2 Mechanism Driver for Ansible Networking
+    """ML2 Mechanism Driver for Ansible Networking
+
     https://www.ansible.com/integrations/networks
     """
 
@@ -35,10 +36,11 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         self.inventory = config.build_ansible_inventory()
 
     def run_task(self, network, host_name, task):
-        """
+        """Run a task.
+
         task is a dictionary that represents an ansible task.
-        # TODO: this probably needs to be a function on a switch object
-                once we get that far
+        # TODO(radez): this probably needs to be a function on a switch
+                       object once we get that far
         """
         playbook = [{
             'name': 'Openstack networking-ansible playbook',
@@ -51,12 +53,14 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                                     inventory=self.inventory)
         failures = result.stats['failures']
         if failures:
-            # TODO: Should this be a custom error rather than Exception?
+            # TODO(radez): Should this be a custom error rather than
+            # Exception?
             raise Exception(failures)
         return result
 
     def create_network_postcommit(self, context):
         """Create a network.
+
         :param context: NetworkContext instance describing the new
         network.
         Called after the transaction commits. Call can block, though
@@ -71,16 +75,16 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         segmentation_id = network['provider:segmentation_id']
         physnet = network['provider:physical_network']
 
-
         if provider_type == 'vlan' and segmentation_id:
             # assuming all hosts
-            # TODO: can we filter by physnets?
+            # TODO(radez): can we filter by physnets?
             for host_name in inventory['all']['hosts']:
                 # Create VLAN on the switch
                 try:
                     task = {'name': 'add vlan id {}'.format(segmentation_id),
-                           # TODO: This is hard coded for juniper because
-                           #       that was the initial vm we got running.
+                           # TODO(radez): This is hard coded for juniper
+                           #              because that was the initial vm
+                           #              we got running.
                             'junos_vlan': {'name': 'vlan{}'.format(
                                                        segmentation_id),
                                            'vlan_id': segmentation_id}
@@ -100,6 +104,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
     def delete_network_postcommit(self, context):
         """Delete a network.
+
         :param context: NetworkContext instance describing the current
         state of the network, prior to the call to delete it.
         Called after the transaction commits. Call can block, though
@@ -116,13 +121,13 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
         if provider_type == 'vlan' and segmentation_id:
             # assuming all hosts
-            # TODO: can we filter by physnets?
+            # TODO(radez): can we filter by physnets?
             for host_name in inventory['all']['hosts']:
                 # Delete VLAN on the switch
                 try:
                     task = {'name': 'delete vlan id {}'.format(
                                         segmentation_id),
-                           # TODO: This is hard coded for juniper because
+                           # TODO(radez): This is hard coded for juniper because
                            #       that was the initial vm we got running.
                             'junos_vlan': {'name': 'vlan{}'.format(
                                                        segmentation_id),
@@ -143,6 +148,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
     def update_port_postcommit(self, context):
         """Update a port.
+
         :param context: PortContext instance describing the new
         state of the port, as well as the original state prior
         to the update_port call.
@@ -167,6 +173,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
     def delete_port_postcommit(self, context):
         """Delete a port.
+
         :param context: PortContext instance describing the current
         state of the port, prior to the call to delete it.
         Called after the transaction completes. Call can block, though
@@ -182,6 +189,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
     def bind_port(self, context):
         """Attempt to bind a port.
+
         :param context: PortContext instance describing the port
         This method is called outside any transaction to attempt to
         establish a port binding using this mechanism driver. Bindings
@@ -222,7 +230,9 @@ class AnsibleMechanismDriver(api.MechanismDriver):
     @staticmethod
     def _is_port_bound(port):
         """Return whether a port is bound by this driver.
+
         Ports bound by this driver have their VIF type set to 'other'.
+
         :param port: The port to check
         :returns: Whether the port is bound by the NGS driver
         """
@@ -234,9 +244,11 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
     def _vlan_access_port(self, assign_remove, port, network):
         """Unplug a port from a network.
+
         If the configuration required to unplug the port is not present
         (e.g. local link information), the port will not be unplugged and no
         exception will be raised.
+
         :param assign_remove: 'assign' or 'remove'
         :param port: The port to unplug
         :param network: The network from which to unplug the port
@@ -272,7 +284,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             task = {'name': '{a_r} access vlan id {seg_id}'.format(
                                 a_r=assign_remove.capitalize(),
                                 seg_id=segmentation_id),
-                    # TODO: This is hard coded for juniper because
+                    # TODO(radez): This is hard coded for juniper because
                     #       that was the initial vm we got running.
                     'junos_l2_interface': {
                         'name': switch_port,
@@ -281,16 +293,17 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                         'access_vlan': 'vlan%s' % segmentation_id,
                         'active': True,
                         'state': state[assign_remove]}
-                   }
+                    }
+
             LOG.debug(dbug_msg[assign_remove].format(
                          switch_port=switch_port,
                          switch_name=switch_name,
                          segmentation_id=segmentation_id))
             result = self.run_task(network, host_name, task) 
             LOG.info(info_msg[assign_remove].format(
-                         switch_port=port['id'],
-                         net_id=network['id'],
-                         switch_name=switch_name))
+                    switch_port=port['id'],
+                    net_id=network['id'],
+                    switch_name=switch_name))
         except Exception as e:
             LOG.error(error_msg[assign_remove].format(
                           switch_port=port['id'],

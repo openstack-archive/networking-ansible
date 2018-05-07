@@ -22,6 +22,7 @@ from neutron.services.trunk.drivers import base as trunk_base
 
 from networking_ansible import constants as con
 
+
 @registry.has_registry_receivers
 class AnsibleTrunkDriver(trunk_base.DriverBase):
 
