@@ -19,14 +19,15 @@ from oslo_log import log as logging
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
+
 def build_ansible_inventory():
-    """
-    Get inventory list from config files
+    """Get inventory list from config files
+
     returns python dict representing ansible inventory
     according to ansible inventory file yaml definition
     http://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
-    # TODO: consider take advantage of ansible inventory grouping 
     """
+    # TODO(radez): consider take advantage of ansible inventory grouping
 
     driver_tag = 'ansible:'
     inventory = {}
@@ -37,19 +38,18 @@ def build_ansible_inventory():
         parser = cfg.ConfigParser(conffile, sections)
         try:
             parser.parse()
-        except IOError, e:
+        except IOError as e:
             LOG.error(str(e))
 
         # filter out sections that begin with the driver's tag
-        hosts = {k:v for k,v
-                    in sections.iteritems() if k.startswith(driver_tag)}
+        hosts = {k: v for k, v in sections.iteritems()
+                 if k.startswith(driver_tag)}
 
         # munge the oslo_config data removing the device tag and
         # turning lists with single item strings into strings
         for host in hosts:
             dev_id = host.partition(driver_tag)[2]
-            dev_cfg = {k: v[0] for k, v
-                          in hosts[host].items()}
+            dev_cfg = {k: v[0] for k, v in hosts[host].items()}
             inventory[dev_id] = dev_cfg
 
     LOG.info('Ansible Host List: %s' % ', '.join(inventory.keys()))

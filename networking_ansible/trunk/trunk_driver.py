@@ -36,9 +36,9 @@ class AnsibleTrunkDriver(trunk_base.DriverBase):
 
     @classmethod
     def create(cls):
-         return cls(con.ANSIBLE_ML2_MECH_DRIVER,
-                    (portbindings.VIF_TYPE_OVS,
-                     portbindings.VIF_TYPE_VHOST_USER,),
-                    (t_cons.VLAN,),
-                    None,
-                    can_trunk_bound_port=True)
+        return cls(con.ANSIBLE_ML2_MECH_DRIVER,
+                   (portbindings.VIF_TYPE_OVS,
+                    portbindings.VIF_TYPE_VHOST_USER,),
+                   (t_cons.VLAN,),
+                   None,
+                   can_trunk_bound_port=True)
