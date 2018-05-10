@@ -42,7 +42,7 @@ def build_ansible_inventory():
             LOG.error(str(e))
 
         # filter out sections that begin with the driver's tag
-        hosts = {k: v for k, v in sections.iteritems()
+        hosts = {k: v for k, v in sections.items()
                  if k.startswith(driver_tag)}
 
         # munge the oslo_config data removing the device tag and
