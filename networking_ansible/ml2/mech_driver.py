@@ -203,7 +203,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         binding_profile = port['binding:profile']
         local_link_info = binding_profile.get('local_link_information')
         # Validate port and local link info
-        if not (self._is_port_supported(port) or local_link_info):
+        if not (self._is_port_supported(port) and local_link_info):
             # TODO(radez) log debug messages here
             return None
 
