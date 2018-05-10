@@ -15,9 +15,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslotest import base
+from neutron.tests.unit.plugins.ml2.test_plugin import Ml2PluginV2TestCase
+
+from networking_ansible import config
+from networking_ansible.ml2.mech_driver import AnsibleMechanismDriver
 
 
-class TestCase(base.BaseTestCase):
-
-    """Test case base class for all unit tests."""
+class AnsibleNetworkingTestCase(Ml2PluginV2TestCase):
+    def setUp(self):
+        super(AnsibleNetworkingTestCase, self).setUp()
+        self.config = config
+        self.mech = AnsibleMechanismDriver()

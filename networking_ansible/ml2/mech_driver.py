@@ -79,9 +79,8 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             playbook[0]['tasks'][0]['vars']['port_name'] = switch_port
             playbook[0]['tasks'][0]['vars']['port_description'] = switch_port
 
-        result = ansible_runner.run(  # TODO(radez) ident=network['id'],
-                                      # do we need to pass ident?
-                                    playbook=playbook,
+        # TODO(radez) should we pass ident?
+        result = ansible_runner.run(playbook=playbook,
                                     inventory=self.inventory)
         failures = result.stats['failures']
         if failures:
