@@ -40,21 +40,47 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         self.trunk_driver = trunk_driver.AnsibleTrunkDriver.create()
         self.inventory = config.build_ansible_inventory()
 
-    def run_task(self, network, host_name, task):
+    def run_task(self, task, host_name, segmentation_id, switch_port=None):
         """Run a task.
 
-        task is a dictionary that represents an ansible task.
-        # TODO(radez): this probably needs to be a function on a switch
-                       object once we get that far
+        :param task: name of task in openstack-ml2 ansible role
+        :param host_name: name of a host defined in ml2 conf ini files
+        :param segmentation_id: vlan id of the network
+        :param switch_port: port name on the switch (optional)
+
+        See etc/ansible/roles/openstack-ml2/README.md for an exmaple playbook
         """
+        # TODO(radez): This is hard coded for juniper because
+        #       that was the initial vm we got running.
+        #       need to find out how to do this cross vendor
+        if segmentation_id == '1':
+            segmentation_name = 'default'
+        else:
+            segmentation_name = 'vlan{}'.format(segmentation_id)
+
+        # build out the ansible playbook
         playbook = [{
             'name': 'Openstack networking-ansible playbook',
             'hosts': host_name,
             'gather_facts': 'no',  # no need to do this every run
-            'tasks': [task]
+            'tasks': [{
+                'name': 'do {}'.format(task),
+                'import_role': {
+                    'name': 'openstack-ml2',
+                    'tasks_from': task,
+                },
+                'vars': {
+                    'segmentation_name': segmentation_name,
+                    'segmentation_id': segmentation_id,
+                }
+            }]
         }]
+        if switch_port:
+            playbook[0]['tasks'][0]['vars']['port_name'] = switch_port
+            playbook[0]['tasks'][0]['vars']['port_description'] = switch_port
 
-        result = ansible_runner.run(ident=network['id'],
+        result = ansible_runner.run(  # TODO(radez) ident=network['id'],
+                                      # do we need to pass ident?
                                     playbook=playbook,
                                     inventory=self.inventory)
         failures = result.stats['failures']
@@ -87,18 +113,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             for host_name in self.inventory['all']['hosts']:
                 # Create VLAN on the switch
                 try:
-                    task = {
-                        'name': 'add vlan id {}'.format(segmentation_id),
-                        # TODO(radez): This is hard coded for juniper
-                        #              because that was the initial vm
-                        #              we got running.
-                        'junos_vlan': {
-                            'name': 'vlan{}'.format(segmentation_id),
-                            'vlan_id': segmentation_id
-                        }
-                    }
-
-                    self.run_task(network, host_name, task)
+                    self.run_task('create_network', host_name, segmentation_id)
                     LOG.info('Network {net_id} has been added on ansible host '
                              '{host}'.format(
                                  net_id=network['id'],
@@ -136,17 +151,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             for host_name in self.inventory['all']['hosts']:
                 # Delete VLAN on the switch
                 try:
-                    task = {
-                        'name': 'delete vlan id {}'.format(segmentation_id),
-                        # TODO(radez): This is hard coded for juniper because
-                        #       that was the initial vm we got running.
-                        'junos_vlan': {
-                            'name': 'vlan{}'.format(segmentation_id),
-                            'state': 'absent'
-                        }
-                    }
-
-                    self.run_task(network, host_name, task)
+                    self.run_task('delete_network', host_name, segmentation_id)
                     LOG.info('Network {net_id} has been deleted on ansible '
                              'host {host}'.format(net_id=network['id'],
                                                   host=host_name))
@@ -316,8 +321,8 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         :param port: The port to unplug
         :param network: The network from which to unplug the port
         """
-        state = {'assign': 'present',
-                 'remove': 'absent'}
+        task = {'assign': 'update_port',
+                'remove': 'delete_port'}
         debug_msg = {'assign': 'Plugging in port {switch_port} on '
                                '{switch_name} to vlan: {segmentation_id}',
                      'remove': 'Unplugging port {switch_port} on '
@@ -342,35 +347,12 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
         try:
-            # TODO(radez): This is hard coded for juniper because
-            #       that was the initial vm we got running.
-            #       need to find out how to do this cross vendor
-            if segmentation_id == '1':
-                vlan_name = 'default'
-            else:
-                vlan_name = 'vlan%s' % segmentation_id
-
-            task = {
-                'name': '{a_r} access vlan id {seg_id}'.format(
-                    a_r=assign_remove.capitalize(),
-                    seg_id=segmentation_id),
-                # TODO(radez): This is hard coded for juniper because
-                #       that was the initial vm we got running.
-                'junos_l2_interface': {
-                    'name': switch_port,
-                    'description': 'interface-access',
-                    'mode': 'access',
-                    'access_vlan': vlan_name,
-                    'active': True,
-                    'state': state[assign_remove]
-                }
-            }
-
             LOG.debug(debug_msg[assign_remove].format(
                 switch_port=switch_port,
                 switch_name=switch_name,
                 segmentation_id=segmentation_id))
-            self.run_task(network, switch_name, task)
+            self.run_task(task[assign_remove], switch_name,
+                          segmentation_id, switch_port)
             LOG.info(info_msg[assign_remove].format(
                 neutron_port=port['id'],
                 net_id=network['id'],
