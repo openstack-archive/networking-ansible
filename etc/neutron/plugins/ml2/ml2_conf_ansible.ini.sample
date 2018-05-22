@@ -22,14 +22,12 @@
 #########
 
 [ansible:vyos118_rack_A]
-ansible_connection=network_cli
 ansible_network_os=vyos
 ansible_host=1.2.3.4
 ansible_user=ansible
 ansible_ssh_pass=password
 
 [ansible:openswitch230_rack_23]
-ansible_connection=netconf
 ansible_network_os=openswitch
 ansible_host=5.6.7.8
 ansible_user=ansible
