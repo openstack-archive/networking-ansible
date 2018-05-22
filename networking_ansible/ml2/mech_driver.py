@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ansible_runner
-
 from neutron.db import provisioning_blocks
 from neutron_lib.api.definitions import portbindings
 from neutron_lib.callbacks import resources
 from neutron_lib.plugins.ml2 import api
 from oslo_log import log as logging
 
+from networking_ansible.ansible_networking import AnsibleNetworking
 from networking_ansible import config
 from networking_ansible.trunk import trunk_driver
 
@@ -38,30 +37,9 @@ class AnsibleMechanismDriver(api.MechanismDriver):
     def initialize(self):
         LOG.debug("Initializing Ansible ML2 driver")
         self.trunk_driver = trunk_driver.AnsibleTrunkDriver.create()
+
         self.inventory = config.build_ansible_inventory()
-
-    def run_task(self, network, host_name, task):
-        """Run a task.
-
-        task is a dictionary that represents an ansible task.
-        # TODO(radez): this probably needs to be a function on a switch
-                       object once we get that far
-        """
-        playbook = [{
-            'name': 'Openstack networking-ansible playbook',
-            'hosts': host_name,
-            'gather_facts': 'no',  # no need to do this every run
-            'tasks': [task]
-        }]
-
-        result = ansible_runner.run(ident=network['id'],
-                                    playbook=playbook,
-                                    inventory=self.inventory)
-        failures = result.stats['failures']
-        if failures:
-            # TODO(radez): Create a custom error rather than Exception
-            raise Exception(' '.join(result.stdout))
-        return result
+        self.ansnet = AnsibleNetworking(self.inventory)
 
     def create_network_postcommit(self, context):
         """Create a network.
@@ -87,18 +65,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             for host_name in self.inventory['all']['hosts']:
                 # Create VLAN on the switch
                 try:
-                    task = {
-                        'name': 'add vlan id {}'.format(segmentation_id),
-                        # TODO(radez): This is hard coded for juniper
-                        #              because that was the initial vm
-                        #              we got running.
-                        'junos_vlan': {
-                            'name': 'vlan{}'.format(segmentation_id),
-                            'vlan_id': segmentation_id
-                        }
-                    }
-
-                    self.run_task(network, host_name, task)
+                    self.ansnet.create_network(host_name, segmentation_id)
                     LOG.info('Network {net_id} has been added on ansible host '
                              '{host}'.format(
                                  net_id=network['id'],
@@ -136,17 +103,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             for host_name in self.inventory['all']['hosts']:
                 # Delete VLAN on the switch
                 try:
-                    task = {
-                        'name': 'delete vlan id {}'.format(segmentation_id),
-                        # TODO(radez): This is hard coded for juniper because
-                        #       that was the initial vm we got running.
-                        'junos_vlan': {
-                            'name': 'vlan{}'.format(segmentation_id),
-                            'state': 'absent'
-                        }
-                    }
-
-                    self.run_task(network, host_name, task)
+                    self.ansnet.delete_network(host_name, segmentation_id)
                     LOG.info('Network {net_id} has been deleted on ansible '
                              'host {host}'.format(net_id=network['id'],
                                                   host=host_name))
@@ -182,7 +139,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             # The port has been unbound. This will cause the local link
             # information to be lost, so remove the port from the network on
             # the switch now while we have the required information.
-            self._vlan_access_port('remove', context.original, port)
+            self.ansnet.vlan_access_port('remove', context.original, port)
 
     def delete_port_postcommit(self, context):
         """Delete a port.
@@ -197,9 +154,9 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         deleted.
         """
         if self._is_port_bound(context.current):
-            self._vlan_access_port('remove',
-                                   context.current,
-                                   context.network.current)
+            self.ansnet.vlan_access_port('remove',
+                                         context.current,
+                                         context.network.current)
 
     def bind_port(self, context):
         """Attempt to bind a port.
@@ -267,8 +224,8 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                       switch_name=switch_name,
                       segmentation_id=segmentation_id))
         # Assign port to network
-        self._vlan_access_port('assign', context.current,
-                               context.network.current)
+        self.ansnet.vlan_access_port('assign', context.current,
+                                     context.network.current)
         LOG.info("Successfully bound port {port_id} in segment "
                  "{segment_id} on host {host}".format(
                      port_id=port['id'],
@@ -298,87 +255,8 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         :param port: The port to check
         :returns: Whether the port is bound
         """
-        # TODO(radez): do something with this
-        # if not AnsibleMechanismDriver._is_port_supported(port):
-        #    return False
+        if not AnsibleMechanismDriver._is_port_supported(port):
+            return False
 
         vif_type = port[portbindings.VIF_TYPE]
         return vif_type == portbindings.VIF_TYPE_OTHER
-
-    def _vlan_access_port(self, assign_remove, port, network):
-        """Assign an access port to a vlan.
-
-        If the configuration required to unplug the port is not present
-        (e.g. local link information), the port will not be unplugged and no
-        exception will be raised.
-
-        :param assign_remove: 'assign' or 'remove'
-        :param port: The port to unplug
-        :param network: The network from which to unplug the port
-        """
-        state = {'assign': 'present',
-                 'remove': 'absent'}
-        debug_msg = {'assign': 'Plugging in port {switch_port} on '
-                               '{switch_name} to vlan: {segmentation_id}',
-                     'remove': 'Unplugging port {switch_port} on '
-                               '{switch_name} from vlan: {segmentation_id}'}
-        info_msg = {'assign': 'Port {neutron_port} has been plugged into '
-                              'network {net_id} on device {switch_name}',
-                    'remove': 'Port {neutron_port} has been unplugged from '
-                              'network {net_id} on device {switch_name}'}
-        error_msg = {'assign': 'Failed to unplug port {neutron_port} on '
-                               'device: {switch_name} from network {net_id} '
-                               'reason: {exc}',
-                     'remove': 'Failed to plug in port {neutron_port} on '
-                               'device: {switch_name} from network {net_id} '
-                               'reason: {exc}'}
-
-        # If segmentation ID is None, set vlan 1
-        segmentation_id = network['provider:segmentation_id'] or '1'
-
-        local_link_info = port['binding:profile'].get('local_link_information')
-        if not local_link_info:
-            return
-        switch_name = local_link_info[0].get('switch_info')
-        switch_port = local_link_info[0].get('port_id')
-        try:
-            # TODO(radez): This is hard coded for juniper because
-            #       that was the initial vm we got running.
-            #       need to find out how to do this cross vendor
-            if segmentation_id == '1':
-                vlan_name = 'default'
-            else:
-                vlan_name = 'vlan%s' % segmentation_id
-
-            task = {
-                'name': '{a_r} access vlan id {seg_id}'.format(
-                    a_r=assign_remove.capitalize(),
-                    seg_id=segmentation_id),
-                # TODO(radez): This is hard coded for juniper because
-                #       that was the initial vm we got running.
-                'junos_l2_interface': {
-                    'name': switch_port,
-                    'description': 'interface-access',
-                    'mode': 'access',
-                    'access_vlan': vlan_name,
-                    'active': True,
-                    'state': state[assign_remove]
-                }
-            }
-
-            LOG.debug(debug_msg[assign_remove].format(
-                switch_port=switch_port,
-                switch_name=switch_name,
-                segmentation_id=segmentation_id))
-            self.run_task(network, switch_name, task)
-            LOG.info(info_msg[assign_remove].format(
-                neutron_port=port['id'],
-                net_id=network['id'],
-                switch_name=switch_name))
-        except Exception as e:
-            LOG.error(error_msg[assign_remove].format(
-                neutron_port=port['id'],
-                net_id=network['id'],
-                switch_name=switch_name,
-                exc=e))
-            raise e
