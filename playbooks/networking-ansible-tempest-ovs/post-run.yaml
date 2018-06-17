@@ -1,0 +1,10 @@
+---
+
+- name: Post-run playbook for networking-ansible-tempest-ovs job
+  hosts: controller
+  tasks:
+    - name: collect ansible logs
+      copy:
+        src: '{{ ansible_logs_file }}'
+        dest: '{{ zuul.executor.log_root }}/ansible.log'
+        remote_src: yes
