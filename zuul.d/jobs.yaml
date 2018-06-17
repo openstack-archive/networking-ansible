@@ -1,0 +1,33 @@
+- job:
+    name: networking-ansible-tempest-plugin-base
+    abstract: true
+    description: Abstract base job for all plugin jobs
+    timeout: 7800
+    required-projects:
+      - openstack/neutron
+      - openstack/networking-ansible
+    irrelevant-files:
+      - ^(test-|)requirements.txt$
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^networking_ansible/locale/.*$
+      - ^networking_ansible/tests/unit/.*$
+      - ^releasenotes/.*$
+      - ^setup.cfg$
+      - ^tox.ini$
+    roles:
+      - zuul: openstack-dev/devstack
+    vars:
+      tox_envlist: all
+      devstack_localrc:
+        TEMPEST_PLUGINS: /opt/stack/new/networking-ansible
+        Q_PLUGIN: ml2
+        Q_USE_PROVIDERNET_FOR_PUBLIC: False
+        ENABLE_TENANT_VLANS: True
+      devstack_plugins:
+        networking-ansible: git://git.openstack.org/openstack/networking-ansible.git
+
+- job:
+    name: networking-ansible-tempest-ovs
+    parent: networking-ansible-tempest-plugin-base
+    voting: false
