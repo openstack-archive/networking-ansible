@@ -1,0 +1,11 @@
+---
+
+- name: Pre-run playbook for networking-ansible-tempest-ovs job
+  hosts: primary
+  tasks:
+    - name: enable logging for ansible runs
+      lineinfile:
+        path: /etc/ansible/ansible.cfg
+        regexp: "^#?log_path ="
+        line: 'log_path = {{ ansible_logs_file }}'
+      become: yes
