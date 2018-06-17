@@ -1,0 +1,49 @@
+---
+
+- name: Pre-run playbook for networking-ansible-tempest-ovs job
+  hosts: controller
+  tasks:
+    - name: check if ansible.cfg exists
+      stat:
+        path: /etc/ansible/ansible.cfg
+      register: ansible_file
+
+    - name: output the status
+      debug:
+        msg: "Anisble.cfg exists"
+      when: ansible_file.stat.exists
+
+    - name: set log path for ansible.cfg
+      lineinfile:
+        path: /etc/ansible/ansible.cfg
+        regexp: "^#?log_path"
+        line: "log_path = {{ ansible_logs_file }}"
+      become: yes
+      when: ansible_file.stat.exists
+
+    - name: check if stack user has home directory
+      stat:
+        path: "/home/stack"
+      register: home_dir
+
+    - name: let know about home dir
+      debug:
+        msg: "Home dir /home/stack exists"
+      when: home_dir.stat.isdir is defined and home_dir.stat.isdir
+
+    - name: enable logging for ansible runs for stack user
+      copy:
+        dest: "/home/stack/.ansible.cfg"
+        content: |
+          [defaults]
+          log_path = {{ ansible_logs_file }}
+        owner: stack
+      when: home_dir.stat.isdir is defined and home_dir.stat.isdir
+      become: yes
+
+    - name: enable logging for ansible runs for current user
+      copy:
+        dest: "{{ ansible_user_dir }}/.ansible.cfg"
+        content: |
+          [defaults]
+          log_path = {{ ansible_logs_file }}
