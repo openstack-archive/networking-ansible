@@ -21,7 +21,6 @@ from oslo_log import log as logging
 
 from networking_ansible import ansible_networking
 from networking_ansible import config
-from networking_ansible.trunk import trunk_driver
 
 LOG = logging.getLogger(__name__)
 
@@ -36,7 +35,6 @@ class AnsibleMechanismDriver(api.MechanismDriver):
 
     def initialize(self):
         LOG.debug("Initializing Ansible ML2 driver")
-        self.trunk_driver = trunk_driver.AnsibleTrunkDriver.create()
 
         inventory = config.build_ansible_inventory()
         self.ansnet = ansible_networking.AnsibleNetworking(inventory)
