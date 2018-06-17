@@ -1,0 +1,58 @@
+- job:
+    name: networking-ansible-tempest-plugin-base
+    abstract: true
+    description: Abstract base job for all plugin jobs
+    timeout: 7800
+    required-projects:
+      - openstack/neutron
+      - openstack/ironic
+    irrelevant-files:
+      - ^(test-|)requirements.txt$
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^networking_ansible/locale/.*$
+      - ^networking_ansible/tests/unit/.*$
+      - ^releasenotes/.*$
+      - ^setup.cfg$
+      - ^tools/.*$
+      - ^tox.ini$
+    roles:
+      - zuul: openstack-dev/devstack
+    vars:
+      tox_envlist: all
+    devstack_localrc:
+      TEMPEST_PLUGINS: /opt/stack/new/networking-ansible
+      VIRT_DRIVER: ironic
+      OVS_PHYSICAL_BRIDGE: brbm
+      PHYSICAL_NETWORK: mynetwork
+      Q_PLUGIN: ml2
+      Q_USE_PROVIDERNET_FOR_PUBLIC: False
+      ENABLE_TENANT_VLANS: True
+      Q_ML2_TENANT_NETWORK_TYPE: vlan
+      TENANT_VLAN_RANGE: 100:150
+      IRONIC_PROVISION_NETWORK_NAME: ironic-provision
+      IRONIC_PROVISION_SUBNET_PREFIX: 10.0.5.0/24
+      IRONIC_PROVISION_SUBNET_GATEWAY: 10.0.5.1
+      IRONIC_VM_SPECS_RAM: 384
+      IRONIC_RAMDISK_TYPE: tinyipa
+      IRONIC_USE_LINK_LOCAL: True
+      IRONIC_BUILD_DEPLOY_RAMDISK: False
+      IRONIC_ENABLED_DRIVERS: fake,pxe_ipmitool
+      IRONIC_VM_EPHEMERAL_DISK: 1
+      IRONIC_DEPLOY_DRIVER: ipmi
+      IRONIC_ENABLED_NETWORK_INTERFACES: flat,neutron
+      IRONIC_NETWORK_INTERFACE: neutron
+      IRONIC_AUTOMATED_CLEAN_ENABLED: False
+    devstack_plugins:
+      networking-ansible: git://git.openstack.org/openstack/networking-ansible.git
+    devstack_services:
+    devstack_local_conf:
+      post-config:
+        $NEUTRON_CONF:
+          DEFAULT:
+            global_physnet_mtu: 1450
+
+- job:
+    name: networking-ansible-tempest-ovs
+    parent: networking-ansible-tempest-plugin-base
+    voting: false
