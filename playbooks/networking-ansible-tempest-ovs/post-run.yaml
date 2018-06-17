@@ -1,0 +1,12 @@
+---
+
+- name: Post-run playbook for networking-ansible-tempest-ovs job
+  hosts: all
+  tasks:
+    - name: collect ansible logs
+      synchronize:
+        src: '{{ ansible_logs_file }}'
+        dest: '{{ zuul.executor.log_root }}'
+        mode: pull
+        copy_links: true
+        verify_host: true
