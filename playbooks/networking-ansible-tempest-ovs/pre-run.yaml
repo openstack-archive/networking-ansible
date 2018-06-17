@@ -1,0 +1,12 @@
+---
+
+- name: Pre-run playbook for networking-ansible-tempest-ovs job
+  hosts: primary
+  tasks:
+    - name: enable logging for ansible runs
+      copy:
+        dest: "{{ ansible_user_dir }}/.ansible.cfg"
+        content: |
+          [defaults]
+          log_path = {{ ansible_logs_file }}
+      become: yes

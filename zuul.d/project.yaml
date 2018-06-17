@@ -1,0 +1,9 @@
+- project-template:
+    name: networking-ansible-tempest-jobs
+    check:
+      jobs:
+        - networking-ansible-tempest-ovs
+
+- project:
+    templates:
+      - networking-ansible-tempest-jobs
