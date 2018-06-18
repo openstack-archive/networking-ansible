@@ -52,5 +52,5 @@ def build_ansible_inventory():
             dev_cfg = {k: v[0] for k, v in hosts[host].items()}
             inventory[dev_id] = dev_cfg
 
-    LOG.info('Ansible Host List: %s' % ', '.join(inventory))
+    LOG.info('Ansible Host List: %s', ', '.join(inventory))
     return {'all': {'hosts': inventory}}
