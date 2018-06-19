@@ -13,26 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import unittest
 
-from mock import patch
-
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible.tests import base
 
 
 # TODO(radez) autospec seems to break things
-@patch('networking_ansible.ansible_networking.'
-       'AnsibleNetworking.vlan_access_port')  # , autospec=True)
-@patch('networking_ansible.ml2.mech_driver.provisioning_blocks', autospec=True)
-class TestMechDriverPortChecks(NetworkingAnsibleTestCase):
+@mock.patch('networking_ansible.ansible_networking.'
+            'AnsibleNetworking.vlan_access_port')  # , autospec=True)
+@mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
+            autospec=True)
+class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
     def test_bind_port(self, mock_prov_blks, mock_vlan_access_port):
         self.mech.bind_port(self.mock_port_context)
         # TODO(radez) assert something
         mock_vlan_access_port.assert_called_once()
 
     @unittest.expectedFailure
-    @patch('networking_ansible.ml2.mech_driver.'
-           'AnsibleMechanismDriver._is_port_supported', autospec=True)
+    @mock.patch('networking_ansible.ml2.mech_driver.'
+                'AnsibleMechanismDriver._is_port_supported', autospec=True)
     def test_bind_port_port_not_supported(self,
                                           mock_prov_blks,
                                           mock_vlan_access_port,

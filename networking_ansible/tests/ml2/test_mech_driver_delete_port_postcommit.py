@@ -13,16 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mock import patch
+import mock
 
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible.tests import base
 
 
-@patch('networking_ansible.ml2.mech_driver.'
-       'AnsibleMechanismDriver._is_port_bound')
-@patch('networking_ansible.ansible_networking.'
-       'AnsibleNetworking.vlan_access_port', autospec=True)
-class TestMechDriverDeletePortPostCommit(NetworkingAnsibleTestCase):
+@mock.patch('networking_ansible.ml2.mech_driver.'
+            'AnsibleMechanismDriver._is_port_bound')
+@mock.patch('networking_ansible.ansible_networking.'
+            'AnsibleNetworking.vlan_access_port', autospec=True)
+class TestMechDriverDeletePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_port_postcommit_current(self,
                                             mock_vlan_access,
                                             mock_port_bound):
