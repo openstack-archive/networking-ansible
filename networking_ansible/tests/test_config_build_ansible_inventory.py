@@ -13,19 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mock import patch
+import mock
 
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible.tests import base
 
 
-class TestConfigBuildAnsibleInventory(NetworkingAnsibleTestCase):
+class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
 
     def test_build_ansible_inventory_empty_hosts(self):
         self.ansconfig.build_ansible_inventory()
 
-    @patch('networking_ansible.config.LOG')
+    @mock.patch('networking_ansible.config.LOG')
     # TODO(radez) autospec seems to break things
-    @patch('networking_ansible.config.cfg.ConfigParser')  # , autospec=True)
+    @mock.patch('networking_ansible.config.cfg.ConfigParser')
+    # , autospec=True)
     def test_build_ansible_inventory_parser_error(self, mock_parser, mock_log):
         mock_parser().parse.side_effect = IOError()
         self.assertEqual(self.ansconfig.build_ansible_inventory(),

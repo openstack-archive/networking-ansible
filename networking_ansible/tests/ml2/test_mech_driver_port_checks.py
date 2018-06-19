@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mock import patch
+import mock
 
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible.tests import base
 
 
-class TestMechDriverPortChecks(NetworkingAnsibleTestCase):
+class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
 
     #######
     # Testing mech_driver._is_port_supported
@@ -35,21 +35,21 @@ class TestMechDriverPortChecks(NetworkingAnsibleTestCase):
     #######
     # Testing mech_driver._is_port_bound
     #######
-    @patch('networking_ansible.ml2.mech_driver.'
-           'AnsibleMechanismDriver._is_port_supported')
+    @mock.patch('networking_ansible.ml2.mech_driver.'
+                'AnsibleMechanismDriver._is_port_supported')
     def test_is_port_bound(self, mock_port_supported):
         self.assertTrue(
             self.mech._is_port_bound(self.mock_port_context.current))
 
-    @patch('networking_ansible.ml2.mech_driver.'
-           'AnsibleMechanismDriver._is_port_supported')
+    @mock.patch('networking_ansible.ml2.mech_driver.'
+                'AnsibleMechanismDriver._is_port_supported')
     def test_is_port_bound_not_other(self, mock_port_supported):
         self.mock_port_context.current['binding:vif_type'] = 'not-other'
         self.assertFalse(
             self.mech._is_port_bound(self.mock_port_context.current))
 
-    @patch('networking_ansible.ml2.mech_driver.'
-           'AnsibleMechanismDriver._is_port_supported')
+    @mock.patch('networking_ansible.ml2.mech_driver.'
+                'AnsibleMechanismDriver._is_port_supported')
     def test_is_port_bound_port_not_supported(self, mock_port_supported):
         mock_port_supported.return_value = False
         self.assertFalse(

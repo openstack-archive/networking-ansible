@@ -13,16 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mock import patch
+import mock
 
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible.tests import base
 
 
 # Cannot call with autospec=True, the resulting mock object doesn't
 # include the function assert_called_once_with
-@patch('networking_ansible.ansible_networking.'
-       'AnsibleNetworking.create_network')
-class TestMechDriverCreateNetworkPostCommit(NetworkingAnsibleTestCase):
+@mock.patch('networking_ansible.ansible_networking.'
+            'AnsibleNetworking.create_network')
+class TestMechDriverCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def setUp(self):
         super(TestMechDriverCreateNetworkPostCommit, self).setUp()
 

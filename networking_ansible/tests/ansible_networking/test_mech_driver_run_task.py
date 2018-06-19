@@ -15,12 +15,12 @@
 
 from mock import patch
 
-from networking_ansible.exceptions import AnsibleRunnerException
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible import exceptions
+from networking_ansible.tests import base
 
 
 @patch('networking_ansible.ansible_networking.ansible_runner')
-class TestMechDriverRunTask(NetworkingAnsibleTestCase):
+class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
     def test_run_task_no_switchport(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
         mock_result.stats = {'failures': []}
@@ -51,7 +51,7 @@ class TestMechDriverRunTask(NetworkingAnsibleTestCase):
         # TODO(radez) assert something
 
     def test_run_task_failures(self, mock_ans_runner):
-        self.assertRaises(AnsibleRunnerException,
+        self.assertRaises(exceptions.AnsibleRunnerException,
                           self.mech.ansnet._run_task,
                           'fake_task',
                           self.testhost,
