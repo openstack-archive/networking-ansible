@@ -1,1 +1,4 @@
-include etc/ansible/roles/openstack-ml2
+exclude .gitignore
+exclude .gitreview
+
+global-exclude *.pyc
