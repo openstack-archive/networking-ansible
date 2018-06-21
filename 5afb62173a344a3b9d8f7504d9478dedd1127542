@@ -1,0 +1,10 @@
+Code-Review+2: Jakub Libosvar <jlibosva-redhat@email.cz>
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+2: Michael Chapman <woppin@gmail.com>
+Workflow+1: Michael Chapman <woppin@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Thu, 21 Jun 2018 06:34:51 +0000
+Reviewed-on: https://review.openstack.org/576748
+Project: openstack/networking-ansible
+Branch: refs/heads/master
