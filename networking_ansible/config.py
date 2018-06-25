@@ -45,7 +45,7 @@ def build_ansible_inventory():
         hosts = {k: v for k, v in sections.items()
                  if k.startswith(driver_tag)}
 
-        # munge the oslo_config data removing the device tag and
+        # mung the oslo_config data removing the device tag and
         # turning lists with single item strings into strings
         for host in hosts:
             dev_id = host.partition(driver_tag)[2]

@@ -4,7 +4,7 @@
 
 # controls whether or not the role will check to see if netconf is enabled or
 # not.  When this value is True, the role will first connect to the device over
-# CLI and check if the neconf servic is enabled.  If it is not, this will then
+# CLI and check if the neconf service is enabled.  If it is not, this will then
 # enable the netconf service.  When this value is False, the service check will
 # not be performed
 junos_enable_netconf: yes
