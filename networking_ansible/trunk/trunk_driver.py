@@ -40,5 +40,5 @@ class AnsibleTrunkDriver(trunk_base.DriverBase):
                    (portbindings.VIF_TYPE_OVS,
                     portbindings.VIF_TYPE_VHOST_USER,),
                    (t_cons.VLAN,),
-                   None,
+                   agent_type=None,
                    can_trunk_bound_port=True)
