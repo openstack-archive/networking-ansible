@@ -15,7 +15,7 @@
 #   is the name of the host.
 # - The variables in each section will be passed directly to the inventory file
 #   ansible will use. The variables you can use here are defined by ansible.
-#   If you uses an ansible host variable that is not represeted here but
+#   If you uses an ansible host variable that is not represented here but
 #   is supported by the installed version of ansible then the variable should
 #   work as defined by ansible
 #
