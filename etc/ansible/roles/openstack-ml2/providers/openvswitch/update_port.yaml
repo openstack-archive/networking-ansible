@@ -1,0 +1,8 @@
+---
+- name: "openvswitch: run update_port"
+  openvswitch_db:
+    table: Port
+    record: "{{ ml2_port_name }}"
+    col: tag
+    value: "{{ ml2_segmentation_id }}"
+  become: yes
