@@ -17,18 +17,18 @@
 
 import mock
 from neutron.plugins.ml2 import driver_context
-from neutron.tests.unit.plugins.ml2.test_plugin import Ml2PluginV2TestCase
+from neutron.tests.unit.plugins.ml2 import test_plugin
 
-from networking_ansible.ansible_networking import AnsibleNetworking
+from networking_ansible import ansible_networking
 from networking_ansible import config
-from networking_ansible.ml2.mech_driver import AnsibleMechanismDriver
+from networking_ansible.ml2 import mech_driver
 
 
-class NetworkingAnsibleTestCase(Ml2PluginV2TestCase):
+class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
     def setUp(self):
         super(NetworkingAnsibleTestCase, self).setUp()
         self.ansconfig = config
-        self.mech = AnsibleMechanismDriver()
+        self.mech = mech_driver.AnsibleMechanismDriver()
         self.mech.initialize()
         self.testhost = 'testhost'
         self.testsegid = '37'
@@ -69,4 +69,4 @@ class NetworkingAnsibleTestCase(Ml2PluginV2TestCase):
         ]
 
         inventory = {'all': {'hosts': {self.testhost: {}}}}
-        self.mech.ansnet = AnsibleNetworking(inventory)
+        self.mech.ansnet = ansible_networking.AnsibleNetworking(inventory)

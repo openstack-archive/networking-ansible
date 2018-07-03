@@ -19,7 +19,7 @@ from neutron_lib.callbacks import resources
 from neutron_lib.plugins.ml2 import api
 from oslo_log import log as logging
 
-from networking_ansible.ansible_networking import AnsibleNetworking
+from networking_ansible import ansible_networking
 from networking_ansible import config
 from networking_ansible.trunk import trunk_driver
 
@@ -39,7 +39,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         self.trunk_driver = trunk_driver.AnsibleTrunkDriver.create()
 
         inventory = config.build_ansible_inventory()
-        self.ansnet = AnsibleNetworking(inventory)
+        self.ansnet = ansible_networking.AnsibleNetworking(inventory)
 
     def create_network_postcommit(self, context):
         """Create a network.

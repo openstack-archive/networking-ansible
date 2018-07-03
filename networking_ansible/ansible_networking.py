@@ -14,10 +14,9 @@
 #    under the License.
 
 import ansible_runner
-
 from oslo_log import log as logging
 
-from networking_ansible.exceptions import AnsibleRunnerException
+from networking_ansible import exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ class AnsibleNetworking(object):
                                     inventory=self.inventory)
         failures = result.stats['failures']
         if failures:
-            raise AnsibleRunnerException(' '.join(result.stdout))
+            raise exceptions.AnsibleRunnerException(' '.join(result.stdout))
         return result
 
     def create_network(self, host_name, segmentation_id):

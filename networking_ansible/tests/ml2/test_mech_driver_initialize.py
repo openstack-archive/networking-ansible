@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mock import patch
+import mock
 
-from networking_ansible.tests.base import NetworkingAnsibleTestCase
+from networking_ansible.tests import base
 
 
-@patch('networking_ansible.config.build_ansible_inventory', autospec=True)
-class TestMechDriverInit(NetworkingAnsibleTestCase):
+@mock.patch('networking_ansible.config.build_ansible_inventory', autospec=True)
+class TestMechDriverInit(base.NetworkingAnsibleTestCase):
     def test_intialize(self, mock_inventory):
         self.mech.initialize()
         # TODO(radez) assert something
