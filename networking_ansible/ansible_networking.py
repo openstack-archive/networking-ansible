@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 class AnsibleNetworking(object):
     """Object to invoke ansible_runner to call Ansible Networking
 
-    Hold inventory and provide an iterface for calling
+    Hold inventory and provide an interface for calling
     roles in Ansible Networking to manipulate switch configuration
     """
 
