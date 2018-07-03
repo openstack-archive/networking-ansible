@@ -205,7 +205,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         # Validate port and local link info
         if not (self._is_port_supported(port) and local_link_info):
             # TODO(radez) log debug messages here
-            return None
+            return
 
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
