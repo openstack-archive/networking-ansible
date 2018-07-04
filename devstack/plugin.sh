@@ -9,6 +9,15 @@ NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
 
 SSH_KEY_FILE=~/.ssh/id_rsa
 
+function install_ansible {
+    pushd /opt/stack
+    git clone https://github.com/cubeek/ansible.git
+    cd ansible
+    git checkout issue/42108
+    python setup.py build
+    sudo python setup.py install
+    popd
+}
 
 function pre_install {
     :
@@ -50,6 +59,8 @@ function post_config {
     ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
     cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
+
+    install_ansible
 }
 
 
