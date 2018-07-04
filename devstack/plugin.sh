@@ -12,6 +12,14 @@ NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
 
 SSH_KEY_FILE=~/.ssh/id_rsa
 
+function install_ansible {
+    pushd /opt/stack
+    git clone https://github.com/ansible/ansible.git
+    cd ansible
+    python setup.py build
+    sudo python setup.py install
+    popd
+}
 
 function pre_install {
     :
@@ -22,6 +30,12 @@ function install_ansible_roles {
     #TODO: Do this via setuptools
     sudo mkdir -p $ANSIBLE_ROLES_DIR
     sudo cp -r $NET_ANSIBLE_ROLES_DIR/* $ANSIBLE_ROLES_DIR/.
+}
+
+
+function fix_eventlet_version {
+    sudo pip uninstall eventlet -y
+    sudo pip install eventlet===0.19.0
 }
 
 
@@ -61,6 +75,9 @@ function post_config {
     ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
     cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
+
+    install_ansible
+    fix_eventlet_version
 }
 
 
