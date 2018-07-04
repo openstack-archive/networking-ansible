@@ -44,3 +44,4 @@
     voting: false
     vars:
       tempest_test_regex: ^net_ansible_tempest\.tests\.scenario
+    pre-run: install_ansible_playbook.yml

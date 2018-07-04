@@ -1,0 +1,24 @@
+---
+- hosts: primary
+  name: install ansible from source
+  vars:
+    ansible_dest: /opt/stack/ansible
+  tasks:
+
+    - name: fetch ansible source
+      git:
+        repo: https://github.com/cubeek/ansible.git
+        dest: "{{ ansible_dest }}"
+        clone: yes
+        version: issue/42108
+
+    - name: compile ansible
+      command: python setup.py build
+      args:
+        chdir: "{{ ansible_dest }}"
+
+    - name: install ansible package
+      command: python setup.py install
+      args:
+        chdir: "{{ ansible_dest }}"
+      become: yes
