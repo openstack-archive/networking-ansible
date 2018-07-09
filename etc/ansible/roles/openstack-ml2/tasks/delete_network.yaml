@@ -7,4 +7,6 @@
   delegate_to: localhost
 
 - name: include and run device provider specific tasks
-  include_tasks: run.yaml ml2_resource='delete_network'
+  include_tasks: run.yaml
+  vars:
+    ml2_resource: delete_network
