@@ -12,6 +12,29 @@ NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
 
 SSH_KEY_FILE=~/.ssh/id_rsa
 
+function ansible_workarounds {
+    sudo pip uninstall ansible ansible-runner -y
+
+    # This is a workaround for issue https://github.com/ansible/ansible/issues/42108
+    # fix is currenlty merged in devel branch, requested as a backport to 2.6
+    # until we have a build with the fix, we compile upstream devel branch
+    pushd /opt/stack
+    git clone https://github.com/ansible/ansible.git
+    cd ansible
+    python setup.py build
+    sudo python setup.py install
+    popd
+
+    # This is a fix for eventlet compatiblity for issue https://github.com/ansible/ansible-runner/issues/90
+    # Until we merge the fix and get a release, we build from other repository
+    pushd /opt/stack
+    git clone https://github.com/cubeek/ansible-runner.git
+    cd ansible-runner
+    git checkout issue/90
+    python setup.py build
+    sudo python setup.py install
+    popd
+}
 
 function pre_install {
     :
@@ -61,6 +84,8 @@ function post_config {
     ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
     cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
+
+    ansible_workarounds
 }
 
 
