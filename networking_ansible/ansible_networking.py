@@ -72,7 +72,8 @@ class AnsibleNetworking(object):
 
         # TODO(radez) should we pass ident?
         result = ansible_runner.run(playbook=playbook,
-                                    inventory=self.inventory)
+                                    inventory=self.inventory,
+                                    settings={'pexpect_use_poll': False})
         failures = result.stats['failures']
         if failures:
             raise exceptions.AnsibleRunnerException(' '.join(result.stdout))
