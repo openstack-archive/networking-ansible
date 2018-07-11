@@ -36,6 +36,7 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
         restore_command = self.ovs.db_set(
             'Port', self.ovs_port_name, ('tag', current_tag))
         self.addCleanup(restore_command.execute)
+        self.network = self.create_network()
 
     def cleanup_port(self, port_id):
         """Remove Neutron port and skip NotFound exceptions."""
@@ -66,9 +67,8 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
             network_id=network_id, name=self.ovs_port_name)['port']
         self.addCleanup(self.cleanup_port, port['id'])
 
-        host = self.admin_agents_client.list_agents(
-            agent_type='Open vSwitch agent'
-        )['agents'][0]['host']
+        host = self.os_admin.hypervisor_client.list_hypervisors(
+            )['hypervisors'][0]['hypervisor_hostname']
 
         llc = [{'switch_info': 'localhost',
                 'switch_id': self.ovs_bridge_mac,
@@ -91,9 +91,9 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
 
     @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e2')
     def test_update_port(self):
-        net_id = self.admin_networks_client.list_networks(
-            name='private')['networks'][0]['id']
-        self.create_port(net_id)
-        current_tag = self.ovs.db_get('Port', 'net-ans-p0', 'tag').execute()
-        network_segmentation_id = self.get_network_segmentation_id(net_id)
+        self.create_port(self.network['id'])
+        current_tag = self.ovs.db_get(
+            'Port', self.ovs_port_name, 'tag').execute()
+        network_segmentation_id = self.get_network_segmentation_id(
+            self.network['id'])
         self.assertEqual(network_segmentation_id, current_tag)
