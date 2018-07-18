@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import unittest
 
 from networking_ansible.tests import base
 
@@ -32,3 +33,12 @@ class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
         self.assertEqual(self.ansconfig.build_ansible_inventory(),
                          self.empty_inventory)
         mock_log.error.assert_called()
+
+    @unittest.expectedFailure
+    @mock.patch('networking_ansible.config.cfg.ConfigParser.parse',
+                autospec=True)
+    @mock.patch('builtins.dict.items')
+    def test_build_ansible_inventory_w_hosts(self, mock_sections, mock_parse):
+        # TODO(dradez): expectedFailure
+        mock_sections.return_value = {'ansible:testhost': 1}
+        self.config.build_ansible_inventory()
