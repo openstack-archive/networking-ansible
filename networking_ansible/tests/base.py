@@ -18,6 +18,9 @@
 import mock
 from neutron.plugins.ml2 import driver_context
 from neutron.tests.unit.plugins.ml2 import test_plugin
+from neutron.tests.unit.plugins.ml2.test_plugin import Ml2PluginV2TestCase
+from oslo_config import fixture as config_fixture
+from oslo_config import cfg
 
 from networking_ansible import ansible_networking
 from networking_ansible import config
@@ -28,10 +31,13 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
     def setUp(self):
         super(NetworkingAnsibleTestCase, self).setUp()
         self.ansconfig = config
+        #self.mech = AnsibleMechanismDriver()
         self.mech = mech_driver.AnsibleMechanismDriver()
         self.mech.initialize()
+        self.cfg_fixture = self.useFixture(config_fixture.Config(cfg.CONF))
         self.testhost = 'testhost'
         self.testsegid = '37'
+        self.testport = 'switchportid'
         self.empty_inventory = {'all': {'hosts': {}}}
 
         # Define mocked network context
@@ -51,7 +57,7 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
             'binding:profile': {
                 'local_link_information': [{
                     'switch_info': self.testhost,
-                    'port_id': 'switchportid',
+                    'port_id': self.testport,
                 }]
             },
             'binding:vnic_type': 'baremetal',
@@ -70,3 +76,14 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
 
         inventory = {'all': {'hosts': {self.testhost: {}}}}
         self.mech.ansnet = ansible_networking.AnsibleNetworking(inventory)
+        #self.mech.ansnet = AnsibleNetworking(inventory)
+
+    def config(self, **kw):
+        """Override config options for a test."""
+        self.cfg_fixture.config(**kw)
+
+    def add_hosts(self):
+        self.cfg_fixture.conf.register_group(cfg.OptGroup('ansible:testhost'))
+        self.cfg_fixture.register_opts(['key'], group='ansible:testhost')
+        #self.config(key='value', group='ansible:testhost')
+        self.cfg_fixture.config(key='value', group='ansible:testhost')

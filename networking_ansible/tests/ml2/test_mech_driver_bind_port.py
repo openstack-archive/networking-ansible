@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest
-
 import mock
+import unittest
 
 from networking_ansible.tests import base
 
@@ -38,6 +37,7 @@ class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
                                           mock_prov_blks,
                                           mock_vlan_access_port,
                                           mock_port_supported):
+        # TODO(dradez): expectedFailure
         # Error that results
         # File "networking_ansible/tests/ml2/test_mech_driver_bind_port.py",
         #                        line 37, in test_bind_port_port_not_supported
