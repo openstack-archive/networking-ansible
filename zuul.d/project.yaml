@@ -3,6 +3,9 @@
     check:
       jobs:
         - networking-ansible-tempest-ovs
+    gate:
+      jobs:
+        - networking-ansible-tempest-ovs
 
 - project:
     templates:

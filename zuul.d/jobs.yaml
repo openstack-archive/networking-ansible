@@ -41,7 +41,6 @@
 - job:
     name: networking-ansible-tempest-ovs
     parent: networking-ansible-tempest-plugin-base
-    voting: false
     pre-run: playbooks/networking-ansible-tempest-ovs/pre-run.yaml
     post-run: playbooks/networking-ansible-tempest-ovs/post-run.yaml
     vars:
