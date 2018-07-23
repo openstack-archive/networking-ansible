@@ -1,0 +1,8 @@
+Code-Review+2: Jakub Libosvar <jlibosva-redhat@email.cz>
+Workflow+1: Jakub Libosvar <jlibosva-redhat@email.cz>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 23 Jul 2018 08:11:58 +0000
+Reviewed-on: https://review.openstack.org/583746
+Project: openstack/networking-ansible
+Branch: refs/heads/master
