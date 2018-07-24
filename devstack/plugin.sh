@@ -21,6 +21,7 @@ function ansible_workarounds {
     pushd /opt/stack
     git clone https://github.com/ansible/ansible.git
     cd ansible
+    git checkout stable-2.6
     python setup.py build
     sudo python setup.py install
     popd
