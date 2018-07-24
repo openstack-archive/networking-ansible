@@ -1,0 +1,9 @@
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+2: Dan Radez <dradez@redhat.com>
+Workflow+1: Dan Radez <dradez@redhat.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 24 Jul 2018 16:27:29 +0000
+Reviewed-on: https://review.openstack.org/584897
+Project: openstack/networking-ansible
+Branch: refs/heads/master
