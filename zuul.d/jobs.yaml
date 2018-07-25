@@ -8,11 +8,10 @@
       - openstack/neutron
       - openstack/networking-ansible
     irrelevant-files:
-      - ^(test-|)requirements.txt$
       - ^.*\.rst$
       - ^doc/.*$
       - ^networking_ansible/locale/.*$
-      - ^networking_ansible/tests/unit/.*$
+      - ^networking_ansible/tests/.*$
       - ^releasenotes/.*$
       - ^setup.cfg$
       - ^tox.ini$
