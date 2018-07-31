@@ -25,15 +25,6 @@ function ansible_workarounds {
     python setup.py build
     sudo python setup.py install
     popd
-
-    # This is a fix for eventlet compatiblity for issue https://github.com/ansible/ansible-runner/issues/90
-    # Until we merge the fix and get a release, we build from other repository
-    pushd /opt/stack
-    git clone https://github.com/ansible/ansible-runner.git
-    cd ansible-runner
-    python setup.py build
-    sudo python setup.py install
-    popd
 }
 
 function pre_install {
