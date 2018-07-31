@@ -13,7 +13,7 @@ NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
 SSH_KEY_FILE=~/.ssh/id_rsa
 
 function ansible_workarounds {
-    sudo pip uninstall ansible ansible-runner -y
+    sudo pip uninstall ansible -y
 
     # This is a workaround for issue https://github.com/ansible/ansible/issues/42108
     # fix is currenlty merged in devel branch, requested as a backport to 2.6
@@ -22,15 +22,6 @@ function ansible_workarounds {
     git clone https://github.com/ansible/ansible.git
     cd ansible
     git checkout stable-2.6
-    python setup.py build
-    sudo python setup.py install
-    popd
-
-    # This is a fix for eventlet compatiblity for issue https://github.com/ansible/ansible-runner/issues/90
-    # Until we merge the fix and get a release, we build from other repository
-    pushd /opt/stack
-    git clone https://github.com/ansible/ansible-runner.git
-    cd ansible-runner
     python setup.py build
     sudo python setup.py install
     popd
