@@ -18,27 +18,30 @@ import unittest
 
 from networking_ansible.tests import base
 
+class MockedConfigParser(mock.Mock):
+    def __init__(self, conffile, sections):
+        super(MockedConfigParser, self).__init__()
+        self.sections = sections
+
+    def parse(self):
+        self.sections.update({'ansible:testhost': {}})
 
 class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
 
     def test_build_ansible_inventory_empty_hosts(self):
-        self.ansconfig.build_ansible_inventory()
+        self.assertEqual(self.ansconfig.build_ansible_inventory(),
+                         self.empty_inventory)
 
     @mock.patch('networking_ansible.config.LOG')
-    # TODO(radez) autospec seems to break things
     @mock.patch('networking_ansible.config.cfg.ConfigParser')
-    # , autospec=True)
     def test_build_ansible_inventory_parser_error(self, mock_parser, mock_log):
         mock_parser().parse.side_effect = IOError()
         self.assertEqual(self.ansconfig.build_ansible_inventory(),
                          self.empty_inventory)
         mock_log.error.assert_called()
 
-    @unittest.expectedFailure
-    @mock.patch('networking_ansible.config.cfg.ConfigParser.parse',
-                autospec=True)
-    @mock.patch('builtins.dict.items')
-    def test_build_ansible_inventory_w_hosts(self, mock_sections, mock_parse):
-        # TODO(dradez): expectedFailure
-        mock_sections.return_value = {'ansible:testhost': 1}
-        self.config.build_ansible_inventory()
+    @mock.patch('networking_ansible.config.cfg.ConfigParser',
+            MockedConfigParser)
+    def test_build_ansible_inventory_w_hosts(self):
+        self.assertEqual(self.ansconfig.build_ansible_inventory(),
+                         self.inventory)
