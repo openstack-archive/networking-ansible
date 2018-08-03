@@ -28,7 +28,12 @@ class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
         self.mech.ansnet._run_task('fake_task',
                                    self.testhost,
                                    self.testsegid)
-        # TODO(radez) assert something
+        mock_ans_runner.run.assert_called_once_with(
+            inventory=self.inventory,
+            playbook=self.gen_playbook('fake_task',
+                                       self.testhost,
+                                       self.testsegid),
+            settings=self.settings)
 
     def test_run_task_w_switchport(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
@@ -38,7 +43,13 @@ class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
                                    self.testhost,
                                    self.testsegid,
                                    'fake_switchport')
-        # TODO(radez) assert something
+        mock_ans_runner.run.assert_called_once_with(
+            inventory=self.inventory,
+            playbook=self.gen_playbook('fake_task',
+                                       self.testhost,
+                                       self.testsegid,
+                                       'fake_switchport'),
+            settings=self.settings)
 
     def test_run_task_w_segmentation_id_1(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
@@ -48,7 +59,13 @@ class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
                                    self.testhost,
                                    '1',
                                    'fake_switchport')
-        # TODO(radez) assert something
+        mock_ans_runner.run.assert_called_once_with(
+            inventory=self.inventory,
+            playbook=self.gen_playbook('fake_task',
+                                       self.testhost,
+                                       '1',
+                                       'fake_switchport'),
+            settings=self.settings)
 
     def test_run_task_failures(self, mock_ans_runner):
         self.assertRaises(exceptions.AnsibleRunnerException,

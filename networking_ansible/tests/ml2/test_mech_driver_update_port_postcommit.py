@@ -30,6 +30,7 @@ class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
                                             mock_vlan_access,
                                             mock_port_bound):
         self.mech.update_port_postcommit(self.mock_port_context)
+        # TODO(radez) can this be assert_called_once_with?
         mock_prov_blks.provisioning_complete.assert_called_once()
 
     def test_update_port_postcommit_original(self,
@@ -38,7 +39,11 @@ class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
                                              mock_port_bound):
         mock_port_bound.side_effect = [False, True]
         self.mech.update_port_postcommit(self.mock_port_context)
-        # TODO(radez) assert something
+        mock_vlan_access.assert_called_once_with(
+            self.mech.ansnet,
+            'remove',
+            self.mock_port_context.original,
+            self.mock_port_context.network.current)
 
     def test_update_port_postcommit_not_bound(self,
                                               mock_prov_blks,
@@ -46,4 +51,4 @@ class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
                                               mock_port_bound):
         mock_port_bound.side_effect = [False, False]
         self.mech.update_port_postcommit(self.mock_port_context)
-        # TODO(radez) assert something
+        # TODO(radez) mock_vlan_access.assert_not_called()
