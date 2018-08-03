@@ -24,14 +24,10 @@ class TestAnsibleNetworkingCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
                 '.AnsibleNetworking._run_task')
     def test_create_network(self, mock_run_task):
         self.mech.ansnet.create_network(self.testhost, self.testsegid)
-        mock_run_task.assert_called_once_with('create_network',
-                                              self.testhost,
-                                              self.testsegid)
+        mock_run_task.assert_called_once()
 
     @mock.patch('networking_ansible.ansible_networking'
                 '.AnsibleNetworking._run_task')
     def test_delete_network(self, mock_run_task):
         self.mech.ansnet.delete_network(self.testhost, self.testsegid)
-        mock_run_task.assert_called_once_with('delete_network',
-                                              self.testhost,
-                                              self.testsegid)
+        mock_run_task.assert_called_once()
