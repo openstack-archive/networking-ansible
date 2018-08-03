@@ -14,6 +14,7 @@
 #    under the License.
 
 from neutron.db import provisioning_blocks
+from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron_lib.api.definitions import portbindings
 from neutron_lib.callbacks import resources
 from neutron_lib.plugins.ml2 import api
@@ -70,12 +71,15 @@ class AnsibleMechanismDriver(api.MechanismDriver):
                                  host=host_name))
 
                 except Exception as e:
+                    # TODO(radez) I don't think there is a message returned
+                    #             from ansible runner's exceptions
                     LOG.error('Failed to create network {net_id} '
                               'on ansible host: {host}, '
                               'reason: {err}'.format(
                                   net_id=network_id,
                                   host=host_name,
                                   err=e))
+                    raise ml2_exc.MechanismDriverError(e)
 
     def delete_network_postcommit(self, context):
         """Delete a network.
