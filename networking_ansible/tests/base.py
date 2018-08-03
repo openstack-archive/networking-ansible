@@ -18,8 +18,6 @@
 import mock
 from neutron.plugins.ml2 import driver_context
 from neutron.tests.unit.plugins.ml2 import test_plugin
-from oslo_config import cfg
-from oslo_config import fixture as config_fixture
 
 from networking_ansible import ansible_networking
 from networking_ansible import config
@@ -32,7 +30,6 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
         self.ansconfig = config
         self.mech = mech_driver.AnsibleMechanismDriver()
         self.mech.initialize()
-        self.cfg_fixture = self.useFixture(config_fixture.Config(cfg.CONF))
         self.testhost = 'testhost'
         self.testsegid = '37'
         self.testport = 'switchportid'
@@ -74,12 +71,3 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
         ]
 
         self.mech.ansnet = ansible_networking.AnsibleNetworking(self.inventory)
-
-    def config(self, **kw):
-        """Override config options for a test."""
-        self.cfg_fixture.config(**kw)
-
-    def add_hosts(self):
-        self.cfg_fixture.conf.register_group(cfg.OptGroup('ansible:testhost'))
-        self.cfg_fixture.register_opts(['key'], group='ansible:testhost')
-        self.cfg_fixture.config(key='value', group='ansible:testhost')
