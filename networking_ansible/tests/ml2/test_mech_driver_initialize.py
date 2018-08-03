@@ -22,4 +22,4 @@ from networking_ansible.tests import base
 class TestMechDriverInit(base.NetworkingAnsibleTestCase):
     def test_intialize(self, mock_inventory):
         self.mech.initialize()
-        # TODO(radez) assert something
+        mock_inventory.assert_called_once_with()
