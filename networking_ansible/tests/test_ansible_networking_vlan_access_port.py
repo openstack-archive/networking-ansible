@@ -27,19 +27,13 @@ class TestAnsibleNetworkingVlanAccessPort(base.NetworkingAnsibleTestCase):
         self.mech.ansnet.vlan_access_port('assign',
                                           self.mock_port_context.current,
                                           self.mock_net_context.current)
-        mock_run_task.assert_called_once_with('update_port',
-                                              self.testhost,
-                                              self.testsegid,
-                                              self.testport)
+        mock_run_task.assert_called_once()
 
     def test_remove_vlan_access_port(self, mock_run_task):
         self.mech.ansnet.vlan_access_port('remove',
                                           self.mock_port_context.current,
                                           self.mock_net_context.current)
-        mock_run_task.assert_called_once_with('delete_port',
-                                              self.testhost,
-                                              self.testsegid,
-                                              self.testport)
+        mock_run_task.assert_called_once()
 
     def test_remove_vlan_access_port_wo_link_local(self, mock_run_task):
         port = self.mock_port_context.current

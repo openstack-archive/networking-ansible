@@ -14,38 +14,25 @@
 #    under the License.
 
 import mock
-import unittest
 
 from networking_ansible.tests import base
 
 
-# TODO(radez) autospec seems to break things
 @mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.vlan_access_port')  # , autospec=True)
+            'AnsibleNetworking.vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
     def test_bind_port(self, mock_prov_blks, mock_vlan_access_port):
         self.mech.bind_port(self.mock_port_context)
-        # TODO(radez) assert something
         mock_vlan_access_port.assert_called_once()
 
-    @unittest.expectedFailure
     @mock.patch('networking_ansible.ml2.mech_driver.'
-                'AnsibleMechanismDriver._is_port_supported', autospec=True)
+                'AnsibleMechanismDriver._is_port_supported')
     def test_bind_port_port_not_supported(self,
                                           mock_prov_blks,
                                           mock_vlan_access_port,
                                           mock_port_supported):
-        # TODO(dradez): expectedFailure
-        # Error that results
-        # File "networking_ansible/tests/ml2/test_mech_driver_bind_port.py",
-        #                        line 37, in test_bind_port_port_not_supported
-        #   self.mech.bind_port(self.mock_port_context)
-        # File "networking_ansible/ml2/mech_driver.py", line 206, in bind_port
-        #   if not (self._is_port_supported(port) and local_link_info):
-        # TypeError: 'NonCallableMagicMock' object is not callable
-
         mock_port_supported.return_value = False
         self.mech.bind_port(self.mock_port_context)
         mock_vlan_access_port.assert_not_called()

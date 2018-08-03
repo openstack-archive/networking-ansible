@@ -21,17 +21,20 @@ from networking_ansible.tests import base
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
 @mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.vlan_access_port', autospec=True)
+            'AnsibleNetworking.vlan_access_port')
 class TestMechDriverDeletePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_port_postcommit_current(self,
                                             mock_vlan_access,
                                             mock_port_bound):
         self.mech.delete_port_postcommit(self.mock_port_context)
-        # TODO(radez) assert something
+        mock_vlan_access.assert_called_once_with(
+            'remove',
+            self.mock_port_context.current,
+            self.mock_port_context.network.current)
 
     def test_delete_port_postcommit_not_bound(self,
                                               mock_vlan_access,
                                               mock_port_bound):
         mock_port_bound.return_value = False
         self.mech.delete_port_postcommit(self.mock_port_context)
-        # TODO(radez) assert something
+        mock_vlan_access.assert_not_called()

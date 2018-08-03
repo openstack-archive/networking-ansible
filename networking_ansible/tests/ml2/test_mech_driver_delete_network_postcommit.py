@@ -18,8 +18,6 @@ import mock
 from networking_ansible.tests import base
 
 
-# Cannot call with autospec=True, the resulting mock object doesn't
-# include the function assert_called_once_with
 @mock.patch('networking_ansible.ansible_networking.'
             'AnsibleNetworking.delete_network')
 class TestMechDriverDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
@@ -28,14 +26,12 @@ class TestMechDriverDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
     def test_delete_network_postcommit(self, mock_delete_network):
         self.mech.delete_network_postcommit(self.mock_net_context)
-        mock_delete_network.assert_called_once_with(self.testhost,
-                                                    self.testsegid)
+        mock_delete_network.assert_called_once()
 
     def test_delete_network_postcommit_fails(self, mock_delete_network):
         mock_delete_network.side_effect = Exception()
         self.mech.delete_network_postcommit(self.mock_net_context)
-        mock_delete_network.assert_called_once_with(self.testhost,
-                                                    self.testsegid)
+        mock_delete_network.assert_called_once()
 
     def test_delete_network_postcommit_not_vlan(self, mock_delete_network):
         self.mock_net_context.current['provider:network_type'] = 'not-vlan'
