@@ -16,6 +16,7 @@
 import mock
 
 from networking_ansible.tests import base
+from neutron.plugins.ml2.common import exceptions as ml2_exc
 
 
 # Cannot call with autospec=True, the resulting mock object doesn't
@@ -33,7 +34,9 @@ class TestMechDriverCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
     def test_create_network_postcommit_fails(self, mock_create_network):
         mock_create_network.side_effect = Exception()
-        self.mech.create_network_postcommit(self.mock_net_context)
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mech.create_network_postcommit,
+                          self.mock_net_context)
         mock_create_network.assert_called_once_with(self.testhost,
                                                     self.testsegid)
 
