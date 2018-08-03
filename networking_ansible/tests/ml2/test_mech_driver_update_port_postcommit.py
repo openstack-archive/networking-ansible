@@ -21,7 +21,7 @@ from networking_ansible.tests import base
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
 @mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.vlan_access_port', autospec=True)
+            'AnsibleNetworking.vlan_access_port')#, autospec=True)
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
@@ -38,7 +38,7 @@ class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
                                              mock_port_bound):
         mock_port_bound.side_effect = [False, True]
         self.mech.update_port_postcommit(self.mock_port_context)
-        # TODO(radez) assert something
+        mock_vlan_access.assert_called_once()
 
     def test_update_port_postcommit_not_bound(self,
                                               mock_prov_blks,
@@ -46,4 +46,4 @@ class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
                                               mock_port_bound):
         mock_port_bound.side_effect = [False, False]
         self.mech.update_port_postcommit(self.mock_port_context)
-        # TODO(radez) assert something
+        mock_vlan_access.assert_not_called()
