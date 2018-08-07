@@ -64,8 +64,9 @@ function post_config {
     populate_ml2_config /$Q_PLUGIN_CONF_FILE ml2 mechanism_drivers=$Q_ML2_PLUGIN_MECHANISM_DRIVERS
 
     # Create config file for openvswitch ansible module
-    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:localhost" ansible_network_os=openvswitch
-    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:localhost" ansible_user=$(whoami)
+    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:ovs_test" ansible_network_os=openvswitch
+    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:ovs_test" ansible_host=localhost
+    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:ovs_test" ansible_user=$(whoami)
 
     # Create resources for openvswitch
     sudo ovs-vsctl --may-exist add-br $NET_ANSIBLE_OVS_BRIDGE -- --may-exist add-port $NET_ANSIBLE_OVS_BRIDGE $NET_ANSIBLE_OVS_PORT -- set Interface $NET_ANSIBLE_OVS_PORT type=internal
