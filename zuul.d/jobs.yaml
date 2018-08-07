@@ -28,8 +28,13 @@
         NET_ANSIBLE_OVS_PORT: net-ans-p0
       devstack_local_conf:
         test-config:
+          $NEUTRON_CONF:
+            ansible:ovs_test:
+              ansible_network_os: openvswitch
+              ansible_host: localhost
           $TEMPEST_CONFIG:
             net_ansible_openvswitch:
+              switch_name: ovs_test
               bridge_name: net-ans-br
               port_name: net-ans-p0
             service_available:
