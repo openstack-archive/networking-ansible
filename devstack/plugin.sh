@@ -12,20 +12,6 @@ NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
 
 SSH_KEY_FILE=~/.ssh/id_rsa
 
-function ansible_workarounds {
-    sudo pip uninstall ansible -y || :
-
-    # This is a workaround for issue https://github.com/ansible/ansible/issues/42108
-    # fix is currenlty merged in devel branch, requested as a backport to 2.6
-    # until we have a build with the fix, we compile upstream devel branch
-    pushd /opt/stack
-    [ -d ansible ] || git clone https://github.com/ansible/ansible.git
-    cd ansible
-    git checkout stable-2.6
-    python setup.py build
-    sudo python setup.py install
-    popd
-}
 
 function pre_install {
     # REVISIT(jlibosva): Ubuntu boxes use mawk by default which has a slightly
@@ -70,8 +56,6 @@ function post_config {
         Q_ML2_PLUGIN_MECHANISM_DRIVERS+=,"$NET_ANSIBLE_MECH_DRIVER_ALIAS"
     fi
     populate_ml2_config /$Q_PLUGIN_CONF_FILE ml2 mechanism_drivers=$Q_ML2_PLUGIN_MECHANISM_DRIVERS
-
-    ansible_workarounds
 }
 
 
