@@ -63,19 +63,6 @@ function post_config {
     fi
     populate_ml2_config /$Q_PLUGIN_CONF_FILE ml2 mechanism_drivers=$Q_ML2_PLUGIN_MECHANISM_DRIVERS
 
-    # Create config file for openvswitch ansible module
-    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:localhost" ansible_network_os=openvswitch
-    populate_ml2_config /$Q_PLUGIN_CONF_FILE "ansible:localhost" ansible_user=$(whoami)
-
-    # Create resources for openvswitch
-    sudo ovs-vsctl --may-exist add-br $NET_ANSIBLE_OVS_BRIDGE -- --may-exist add-port $NET_ANSIBLE_OVS_BRIDGE $NET_ANSIBLE_OVS_PORT -- set Interface $NET_ANSIBLE_OVS_PORT type=internal
-    sudo ovs-vsctl set Port $NET_ANSIBLE_OVS_PORT tag=[]
-
-    # Allow ansible on localhost
-    ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
-    cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
-    chmod 600 ~/.ssh/authorized_keys
-
     ansible_workarounds
 }
 
@@ -91,6 +78,15 @@ function unstack {
 
 function test-config {
     echo_summary "Test config"
+
+    # Create resources for openvswitch
+    sudo ovs-vsctl --may-exist add-br $NET_ANSIBLE_OVS_BRIDGE -- --may-exist add-port $NET_ANSIBLE_OVS_BRIDGE $NET_ANSIBLE_OVS_PORT -- set Interface $NET_ANSIBLE_OVS_PORT type=internal
+    sudo ovs-vsctl set Port $NET_ANSIBLE_OVS_PORT tag=[]
+
+    # Allow ansible on localhost
+    ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
+    cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
 }
 
 function clean {
