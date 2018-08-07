@@ -32,6 +32,11 @@ OVS_GROUP = [
         default='tcp:127.0.0.1:6640',
         help='Connection string to OVSDB.'),
     cfg.StrOpt(
+        'switch_name',
+        default='ovs_test',
+        help='Name of the switch as presented in the networking ansible '
+             'config file.'),
+    cfg.StrOpt(
         'bridge_name',
         default='net-ans-br',
         help='Name of the bridge which port is attached to.'),

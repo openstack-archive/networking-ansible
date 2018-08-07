@@ -55,6 +55,10 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
             'Interface', self.ovs_bridge_name, 'mac_in_use').execute()
 
     @property
+    def switch_name(self):
+        return cfg.CONF.net_ansible_openvswitch.switch_name
+
+    @property
     def ovs_port_name(self):
         return cfg.CONF.net_ansible_openvswitch.port_name
 
@@ -70,7 +74,7 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
         host = self.os_admin.hypervisor_client.list_hypervisors(
             )['hypervisors'][0]['hypervisor_hostname']
 
-        llc = [{'switch_info': 'localhost',
+        llc = [{'switch_info': self.switch_name,
                 'switch_id': self.ovs_bridge_mac,
                 'port_id': self.ovs_port_name}]
 
