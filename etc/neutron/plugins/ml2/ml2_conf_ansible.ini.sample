@@ -19,6 +19,9 @@
 #   is supported by the installed version of ansible then the variable should
 #   work as defined by ansible
 #
+#   * manage_vlans :: Default: True
+#     Defines whether to create and delete vlans on the switch.
+#
 #########
 
 [ansible:vyos118_rack_A]
@@ -32,3 +35,4 @@ ansible_network_os=openswitch
 ansible_host=5.6.7.8
 ansible_user=ansible
 ansible_ssh_pass=password
+manage_vlans=False
