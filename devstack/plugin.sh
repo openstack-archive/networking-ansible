@@ -12,20 +12,6 @@ NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
 
 SSH_KEY_FILE=~/.ssh/id_rsa
 
-function ansible_workarounds {
-    sudo pip uninstall ansible -y
-
-    # This is a workaround for issue https://github.com/ansible/ansible/issues/42108
-    # fix is currenlty merged in devel branch, requested as a backport to 2.6
-    # until we have a build with the fix, we compile upstream devel branch
-    pushd /opt/stack
-    git clone https://github.com/ansible/ansible.git
-    cd ansible
-    git checkout stable-2.6
-    python setup.py build
-    sudo python setup.py install
-    popd
-}
 
 function pre_install {
     :
@@ -75,8 +61,6 @@ function post_config {
     ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
     cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
-
-    ansible_workarounds
 }
 
 
