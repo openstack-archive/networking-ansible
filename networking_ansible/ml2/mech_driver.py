@@ -62,24 +62,26 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             # assuming all hosts
             # TODO(radez): can we filter by physnets?
             for host_name in self.ansnet.inventory['all']['hosts']:
-                # Create VLAN on the switch
-                try:
-                    self.ansnet.create_network(host_name, segmentation_id)
-                    LOG.info('Network {net_id} has been added on ansible host '
-                             '{host}'.format(
-                                 net_id=network['id'],
-                                 host=host_name))
+                host = self.ansnet.inventory['all']['hosts'][host_name]
+                if host.get('manage_vlans', True):
+                    # Create VLAN on the switch
+                    try:
+                        self.ansnet.create_network(host_name, segmentation_id)
+                        LOG.info('Network {net_id} has been added on ansible '
+                                 'host {host}'.format(
+                                     net_id=network['id'],
+                                     host=host_name))
 
-                except Exception as e:
-                    # TODO(radez) I don't think there is a message returned
-                    #             from ansible runner's exceptions
-                    LOG.error('Failed to create network {net_id} '
-                              'on ansible host: {host}, '
-                              'reason: {err}'.format(
-                                  net_id=network_id,
-                                  host=host_name,
-                                  err=e))
-                    raise ml2_exc.MechanismDriverError(e)
+                    except Exception as e:
+                        # TODO(radez) I don't think there is a message returned
+                        #             from ansible runner's exceptions
+                        LOG.error('Failed to create network {net_id} '
+                                  'on ansible host: {host}, '
+                                  'reason: {err}'.format(
+                                      net_id=network_id,
+                                      host=host_name,
+                                      err=e))
+                        raise ml2_exc.MechanismDriverError(e)
 
     def delete_network_postcommit(self, context):
         """Delete a network.
@@ -103,19 +105,22 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             # assuming all hosts
             # TODO(radez): can we filter by physnets?
             for host_name in self.ansnet.inventory['all']['hosts']:
-                # Delete VLAN on the switch
-                try:
-                    self.ansnet.delete_network(host_name, segmentation_id)
-                    LOG.info('Network {net_id} has been deleted on ansible '
-                             'host {host}'.format(net_id=network['id'],
-                                                  host=host_name))
+                host = self.ansnet.inventory['all']['hosts'][host_name]
+                if host.get('manage_vlans', True):
+                    # Delete VLAN on the switch
+                    try:
+                        self.ansnet.delete_network(host_name, segmentation_id)
+                        LOG.info('Network {net_id} has been deleted on '
+                                 'ansible host {host}'.format(
+                                     net_id=network['id'],
+                                     host=host_name))
 
-                except Exception as e:
-                    LOG.error('Failed to delete network {net_id} '
-                              'on ansible host: {host}, '
-                              'reason: {err}'.format(net_id=network['id'],
-                                                     host=host_name,
-                                                     err=e))
+                    except Exception as e:
+                        LOG.error('Failed to delete network {net_id} '
+                                  'on ansible host: {host}, '
+                                  'reason: {err}'.format(net_id=network['id'],
+                                                         host=host_name,
+                                                         err=e))
 
     def update_port_postcommit(self, context):
         """Update a port.
