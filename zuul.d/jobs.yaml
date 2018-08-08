@@ -24,14 +24,14 @@
         Q_PLUGIN: ml2
         Q_USE_PROVIDERNET_FOR_PUBLIC: False
         ENABLE_TENANT_VLANS: True
-        NET_ANSIBLE_OVS_BRIDGE: net-ans-br
-        NET_ANSIBLE_OVS_PORT: net-ans-p0
+        NET_ANSIBLE_OVS_BRIDGE: netansbr
+        NET_ANSIBLE_OVS_PORT: netansp0
       devstack_local_conf:
         test-config:
           $TEMPEST_CONFIG:
             net_ansible_openvswitch:
-              bridge_name: net-ans-br
-              port_name: net-ans-p0
+              bridge_name: netansbr
+              port_name: netansp0
             service_available:
               netansible: true
       devstack_plugins:
