@@ -36,6 +36,23 @@
               netansible: true
       devstack_plugins:
         networking-ansible: git://git.openstack.org/openstack/networking-ansible.git
+      devstack_services:
+        # Glance services
+        g-api: false
+        g-reg: false
+        # Neutron services
+        q-metering: false
+        # Swift services
+        s-account: false
+        s-container: false
+        s-object: false
+        s-proxy: false
+        # Cinder services
+        c-api: false
+        c-bak: false
+        c-sch: false
+        c-vol: false
+        cinder: false
 
 - job:
     name: networking-ansible-tempest-ovs
