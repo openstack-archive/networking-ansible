@@ -40,16 +40,6 @@
         # Glance services
         g-api: false
         g-reg: false
-        # Nova services
-        n-api: false
-        n-api-meta: false
-        n-cauth: false
-        n-cond: false
-        n-cpu: false
-        n-novnc: false
-        n-obj: false
-        n-sch: false
-        placement-api: false
         # Neutron services
         q-metering: false
         # Swift services
