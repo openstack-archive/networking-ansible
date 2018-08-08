@@ -57,12 +57,6 @@
         s-container: false
         s-object: false
         s-proxy: false
-        # Cinder services
-        c-api: false
-        c-bak: false
-        c-sch: false
-        c-vol: false
-        cinder: false
 
 - job:
     name: networking-ansible-tempest-ovs
