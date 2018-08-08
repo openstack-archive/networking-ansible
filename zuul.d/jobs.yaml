@@ -37,9 +37,6 @@
       devstack_plugins:
         networking-ansible: git://git.openstack.org/openstack/networking-ansible.git
       devstack_services:
-        # Glance services
-        g-api: false
-        g-reg: false
         # Nova services
         n-api: false
         n-api-meta: false
