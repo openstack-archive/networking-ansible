@@ -8,3 +8,4 @@
         - "{{ playbook_dir }}/providers/{{ ansible_network_os }}"
         - "/etc/ansible/openstack_ml2/providers/{{ ansible_network_os }}"
         - "{{ role_path }}/providers/{{ ansible_network_os }}"
+      skip: true
