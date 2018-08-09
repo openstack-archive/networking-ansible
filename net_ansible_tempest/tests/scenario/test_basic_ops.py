@@ -31,11 +31,6 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
     def setUp(self):
         super(TestWithOvs, self).setUp()
         self.ovs = utils.get_idl_singleton()
-        current_tag = self.ovs.db_get(
-            'Port', self.ovs_port_name, 'tag').execute()
-        restore_command = self.ovs.db_set(
-            'Port', self.ovs_port_name, ('tag', current_tag))
-        self.addCleanup(restore_command.execute)
         self.network = self.create_network()
 
     def cleanup_port(self, port_id):
@@ -92,12 +87,18 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
             port['id'],
             **update_args
         )
+        return port
 
     @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e2')
     def test_update_port(self):
-        self.create_port(self.network['id'])
+        port = self.create_port(self.network['id'])
         current_tag = self.ovs.db_get(
             'Port', self.ovs_port_name, 'tag').execute()
         network_segmentation_id = self.get_network_segmentation_id(
             self.network['id'])
         self.assertEqual(network_segmentation_id, current_tag)
+
+        self.cleanup_port(port['id'])
+        current_tag = self.ovs.db_get(
+            'Port', self.ovs_port_name, 'tag').execute()
+        self.assertEqual([], current_tag)
