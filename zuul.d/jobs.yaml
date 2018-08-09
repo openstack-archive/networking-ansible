@@ -1,12 +1,14 @@
 - job:
     name: networking-ansible-tempest-plugin-base
-    parent: devstack-tempest
+    parent: devstack
+    nodeset: openstack-single-node
     abstract: true
     description: Abstract base job for all plugin jobs
     timeout: 7800
     required-projects:
       - openstack/neutron
       - openstack/networking-ansible
+      - openstack/tempest
     irrelevant-files:
       - ^.*\.rst$
       - ^doc/.*$
@@ -43,6 +45,7 @@
       devstack_plugins:
         networking-ansible: git://git.openstack.org/openstack/networking-ansible.git
       devstack_services:
+        tempest: true
         # Glance services
         g-api: false
         g-reg: false
@@ -59,6 +62,31 @@
         c-sch: false
         c-vol: false
         cinder: false
+        # Nova services
+        n-api: false
+        n-api-meta: false
+        n-cauth: false
+        n-cond: false
+        n-cpu: false
+        n-novnc: false
+        n-obj: false
+        n-sch: false
+        placement-api: false
+      test_results_stage_name: 'test_results'
+      zuul_copy_output:
+        '{{ devstack_base_dir }}/tempest/etc/tempest.conf': 'logs'
+        '{{ devstack_base_dir }}/tempest/etc/accounts.yaml': 'logs'
+        '{{ devstack_base_dir }}/tempest/tempest.log': 'logs'
+        '{{ stage_dir }}/{{ test_results_stage_name }}.subunit': 'logs'
+        '{{ stage_dir }}/{{ test_results_stage_name }}.html': 'logs'
+        '{{ stage_dir }}/stackviz': 'logs'
+      extensions_to_txt:
+        conf: True
+        log: True
+        yaml: True
+        yml: True
+    run: playbooks/devstack-tempest.yaml
+    post-run: playbooks/post-tempest.yaml
 
 - job:
     name: networking-ansible-tempest-ovs
