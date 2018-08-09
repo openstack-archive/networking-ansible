@@ -1,4 +1,8 @@
 ---
-- name: noop
-  debug:
-    msg: No action required for openvswitch provider
+- name: "openvswitch: run delete_port"
+  openvswitch_db:
+    table: Port
+    record: "{{ ml2_port_name }}"
+    col: tag
+    value: "[]"
+  become: yes
