@@ -28,6 +28,12 @@ class TestMechDriverDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
         self.mech.delete_network_postcommit(self.mock_net_context)
         mock_delete_network.assert_called_once()
 
+    def test_delete_network_postcommit_manage_vlans_false(self,
+                                                          mock_delete_network):
+        self.inventory['all']['hosts'][self.testhost]['manage_vlans'] = False
+        self.mech.delete_network_postcommit(self.mock_net_context)
+        mock_delete_network.assert_not_called()
+
     def test_delete_network_postcommit_fails(self, mock_delete_network):
         mock_delete_network.side_effect = Exception()
         self.mech.delete_network_postcommit(self.mock_net_context)
