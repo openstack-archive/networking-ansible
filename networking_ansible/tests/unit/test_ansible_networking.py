@@ -107,20 +107,6 @@ class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
             mock_ans_runner.run.call_args[1]['playbook'][0]['tasks']
                                          [0]['vars']['port_description'])
 
-    def test_run_task_w_segmentation_id_1(self, mock_ans_runner):
-        mock_result = mock_ans_runner.run.return_value
-        mock_result.stats = {'failures': []}
-
-        self.mech.ansnet._run_task('fake_task',
-                                   self.testhost,
-                                   '1',
-                                   'fake_switchport')
-        # Assert seg name is default
-        self.assertEqual(
-            'default',
-            mock_ans_runner.run.call_args[1]['playbook'][0]['tasks']
-                                         [0]['vars']['segmentation_name'])
-
     def test_run_task_failures(self, mock_ans_runner):
         self.assertRaises(exceptions.AnsibleRunnerException,
                           self.mech.ansnet._run_task,
