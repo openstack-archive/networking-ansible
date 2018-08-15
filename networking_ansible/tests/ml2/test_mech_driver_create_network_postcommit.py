@@ -32,6 +32,12 @@ class TestMechDriverCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
         mock_create_network.assert_called_once_with(self.testhost,
                                                     self.testsegid)
 
+    def test_create_network_postcommit_manage_vlans_false(self,
+                                                          mock_create_network):
+        self.inventory['all']['hosts'][self.testhost]['manage_vlans'] = False
+        self.mech.create_network_postcommit(self.mock_net_context)
+        mock_create_network.assert_not_called()
+
     def test_create_network_postcommit_fails(self, mock_create_network):
         mock_create_network.side_effect = Exception()
         self.assertRaises(ml2_exc.MechanismDriverError,

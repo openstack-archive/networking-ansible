@@ -37,6 +37,7 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
         self.testsegid = '37'
         self.testport = 'switchportid'
         self.empty_inventory = {'all': {'hosts': {}}}
+        self.inventory = {'all': {'hosts': {self.testhost: {}}}}
 
         # Define mocked network context
         self.mock_net_context = mock.create_autospec(
@@ -72,8 +73,7 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
             self.mock_port_context.network.current
         ]
 
-        inventory = {'all': {'hosts': {self.testhost: {}}}}
-        self.mech.ansnet = ansible_networking.AnsibleNetworking(inventory)
+        self.mech.ansnet = ansible_networking.AnsibleNetworking(self.inventory)
 
     def config(self, **kw):
         """Override config options for a test."""
