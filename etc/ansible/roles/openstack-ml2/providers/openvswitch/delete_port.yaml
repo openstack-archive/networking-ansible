@@ -4,5 +4,5 @@
     table: Port
     record: "{{ ml2_port_name }}"
     col: tag
-    value: "[]"
+    value: "{{ ml2_segmentation_id }}"
   become: yes
