@@ -1,12 +1,5 @@
 ---
 # delegate task to localhost to avoid starting the device connection
-- name: "check for required fact segmentation_id"
-  fail:
-    msg: "missing required fact: segmentation_id"
-  when: not ml2_segmentation_id
-  delegate_to: localhost
-
-# delegate task to localhost to avoid starting the device connection
 - name: "check for required fact: segmentation_name"
   fail:
     msg: "missing required fact: segmentation_name"

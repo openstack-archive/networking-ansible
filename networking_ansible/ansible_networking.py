@@ -113,8 +113,8 @@ class AnsibleNetworking(object):
                                'device: {switch_name} from network {net_id} '
                                'reason: {exc}'}
 
-        # If segmentation ID is None, set vlan 1
-        segmentation_id = network['provider:segmentation_id'] or '1'
+        # If segmentation ID is None, its default is defained in ansible
+        segmentation_id = network['provider:segmentation_id']
 
         local_link_info = port['binding:profile'].get('local_link_information')
         if not local_link_info:
