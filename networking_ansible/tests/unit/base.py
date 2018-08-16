@@ -23,9 +23,18 @@ from networking_ansible import ansible_networking
 from networking_ansible import config
 from networking_ansible.ml2 import mech_driver
 
+QUOTA_REGISTRIES = (
+    "neutron.quota.resource_registry.unregister_all_resources",
+    "neutron.quota.resource_registry.register_resource_by_name",
+)
+
 
 class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
     def setUp(self):
+        # This is to avoid "No resource found" messages printed to stderr from
+        # quotas Neutron code.
+        for func in QUOTA_REGISTRIES:
+            mock.patch(func).start()
         super(NetworkingAnsibleTestCase, self).setUp()
         self.ansconfig = config
         self.mech = mech_driver.AnsibleMechanismDriver()
