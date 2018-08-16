@@ -15,7 +15,7 @@
 
 import mock
 
-from networking_ansible.tests import base
+from networking_ansible.tests.unit import base
 
 
 class MockedConfigParser(mock.Mock):
