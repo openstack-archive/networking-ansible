@@ -27,7 +27,7 @@ class MockedConfigParser(mock.Mock):
         self.sections.update({'ansible:testhost': {}})
 
 
-class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
+class TestBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
 
     def test_build_ansible_inventory_empty_hosts(self):
         self.assertEqual(self.empty_inventory,

@@ -24,7 +24,7 @@ from networking_ansible.tests.unit import base
             'AnsibleNetworking.vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
-class TestMechDriverBindPort(base.NetworkingAnsibleTestCase):
+class TestBindPort(base.NetworkingAnsibleTestCase):
     def test_bind_port(self, mock_prov_blks, mock_vlan_access_port):
         self.mech.bind_port(self.mock_port_context)
         mock_vlan_access_port.assert_called_once()
@@ -49,10 +49,7 @@ class TestMechDriverBindPort(base.NetworkingAnsibleTestCase):
         mock_vlan_access_port.assert_not_called()
 
 
-class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
-    #######
-    # Testing mech_driver._is_port_supported
-    #######
+class TestIsPortSupported(base.NetworkingAnsibleTestCase):
     def test_is_port_supported(self):
         self.assertTrue(
             self.mech._is_port_supported(self.mock_port_context.current))
@@ -62,24 +59,19 @@ class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
         self.assertFalse(
             self.mech._is_port_supported(self.mock_port_context.current))
 
-    #######
-    # Testing mech_driver._is_port_bound
-    #######
-    @mock.patch('networking_ansible.ml2.mech_driver.'
-                'AnsibleMechanismDriver._is_port_supported')
+
+@mock.patch('networking_ansible.ml2.mech_driver.'
+            'AnsibleMechanismDriver._is_port_supported')
+class TestIsPortBound(base.NetworkingAnsibleTestCase):
     def test_is_port_bound(self, mock_port_supported):
         self.assertTrue(
             self.mech._is_port_bound(self.mock_port_context.current))
 
-    @mock.patch('networking_ansible.ml2.mech_driver.'
-                'AnsibleMechanismDriver._is_port_supported')
     def test_is_port_bound_not_other(self, mock_port_supported):
         self.mock_port_context.current['binding:vif_type'] = 'not-other'
         self.assertFalse(
             self.mech._is_port_bound(self.mock_port_context.current))
 
-    @mock.patch('networking_ansible.ml2.mech_driver.'
-                'AnsibleMechanismDriver._is_port_supported')
     def test_is_port_bound_port_not_supported(self, mock_port_supported):
         mock_port_supported.return_value = False
         self.assertFalse(
@@ -88,10 +80,7 @@ class TestMechDriverPortChecks(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ansible_networking.'
             'AnsibleNetworking.create_network')
-class TestMechDriverCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
-    def setUp(self):
-        super(TestMechDriverCreateNetworkPostCommit, self).setUp()
-
+class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_create_network_postcommit(self, mock_create_network):
         self.mech.create_network_postcommit(self.mock_net_context)
         mock_create_network.assert_called_once()
@@ -123,10 +112,7 @@ class TestMechDriverCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ansible_networking.'
             'AnsibleNetworking.delete_network')
-class TestMechDriverDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
-    def setUp(self):
-        super(TestMechDriverDeleteNetworkPostCommit, self).setUp()
-
+class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_network_postcommit(self, mock_delete_network):
         self.mech.delete_network_postcommit(self.mock_net_context)
         mock_delete_network.assert_called_once()
@@ -158,7 +144,7 @@ class TestMechDriverDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
             'AnsibleMechanismDriver._is_port_bound')
 @mock.patch('networking_ansible.ansible_networking.'
             'AnsibleNetworking.vlan_access_port')
-class TestMechDriverDeletePortPostCommit(base.NetworkingAnsibleTestCase):
+class TestDeletePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_port_postcommit_current(self,
                                             mock_vlan_access,
                                             mock_port_bound):
@@ -177,7 +163,7 @@ class TestMechDriverDeletePortPostCommit(base.NetworkingAnsibleTestCase):
 
 
 @mock.patch('networking_ansible.config.build_ansible_inventory', autospec=True)
-class TestMechDriverInit(base.NetworkingAnsibleTestCase):
+class TestInit(base.NetworkingAnsibleTestCase):
     def test_intialize(self, mock_inventory):
         self.mech.initialize()
         mock_inventory.assert_called_once_with()
@@ -189,7 +175,7 @@ class TestMechDriverInit(base.NetworkingAnsibleTestCase):
             'AnsibleNetworking.vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
-class TestMechDriverUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
+class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_update_port_postcommit_current(self,
                                             mock_prov_blks,
                                             mock_vlan_access,

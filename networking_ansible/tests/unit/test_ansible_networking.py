@@ -19,37 +19,7 @@ from networking_ansible import exceptions
 from networking_ansible.tests.unit import base
 
 
-class MockedConfigParser(mock.Mock):
-    def __init__(self, conffile, sections):
-        super(MockedConfigParser, self).__init__()
-        self.sections = sections
-
-    def parse(self):
-        self.sections.update({'ansible:testhost': {}})
-
-
-class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
-
-    def test_build_ansible_inventory_empty_hosts(self):
-        self.assertEqual(self.empty_inventory,
-                         self.ansconfig.build_ansible_inventory())
-
-    @mock.patch('networking_ansible.config.LOG')
-    @mock.patch('networking_ansible.config.cfg.ConfigParser')
-    def test_build_ansible_inventory_parser_error(self, mock_parser, mock_log):
-        mock_parser().parse.side_effect = IOError()
-        self.assertEqual(self.empty_inventory,
-                         self.ansconfig.build_ansible_inventory())
-        mock_log.error.assert_called()
-
-    @mock.patch('networking_ansible.config.cfg.ConfigParser',
-                MockedConfigParser)
-    def test_build_ansible_inventory_w_hosts(self):
-        self.assertEqual(self.inventory,
-                         self.ansconfig.build_ansible_inventory())
-
-
-class TestAnsibleNetworkingCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
+class TestCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
 
     @mock.patch('networking_ansible.ansible_networking'
                 '.AnsibleNetworking._run_task')
@@ -69,7 +39,7 @@ class TestAnsibleNetworkingCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
 
 
 @mock.patch('networking_ansible.ansible_networking.ansible_runner')
-class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
+class TestRunTask(base.NetworkingAnsibleTestCase):
     def test_run_task_no_switchport(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
         mock_result.stats = {'failures': []}
@@ -132,7 +102,7 @@ class TestMechDriverRunTask(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ansible_networking'
             '.AnsibleNetworking._run_task')
-class TestAnsibleNetworkingVlanAccessPort(base.NetworkingAnsibleTestCase):
+class TestVlanAccessPort(base.NetworkingAnsibleTestCase):
 
     def test_assign_vlan_access_port(self, mock_run_task):
         self.mech.ansnet.vlan_access_port('assign',
