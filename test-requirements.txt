@@ -12,3 +12,4 @@ testtools>=1.4.0 # MIT
 openstackdocstheme>=1.11.0  # Apache-2.0
 # releasenotes
 reno>=1.8.0 # Apache-2.0
+six>=1.10.0

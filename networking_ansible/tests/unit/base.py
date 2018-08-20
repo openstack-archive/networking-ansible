@@ -15,9 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
 from neutron.plugins.ml2 import driver_context
 from neutron.tests.unit.plugins.ml2 import test_plugin
+from six.moves import mock
 
 from networking_ansible import ansible_networking
 from networking_ansible import config

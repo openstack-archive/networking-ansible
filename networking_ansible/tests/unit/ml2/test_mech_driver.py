@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
 from neutron.plugins.ml2.common import exceptions as ml2_exc
+from six.moves import mock
 
 from networking_ansible.tests.unit import base
 
