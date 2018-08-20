@@ -26,16 +26,27 @@ class MockedConfigParser(mock.Mock):
     def parse(self):
         self.sections.update({'ansible:testhost': {}})
 
+    @staticmethod
+    def _parse_file(values, namespace):
+        pass
 
-class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
+
+class TestConfigBuildAnsibleInventory(base.BaseTestCase):
+    parse_config = False
 
     def test_build_ansible_inventory_empty_hosts(self):
+        self.test_config_files = []
+        self.setup_config()
+
         self.assertEqual(self.empty_inventory,
                          self.ansconfig.build_ansible_inventory())
 
     @mock.patch('networking_ansible.config.LOG')
     @mock.patch('networking_ansible.config.cfg.ConfigParser')
     def test_build_ansible_inventory_parser_error(self, mock_parser, mock_log):
+        self.test_config_files = ['/etc/foo.conf']
+        self.setup_config()
+
         mock_parser().parse.side_effect = IOError()
         self.assertEqual(self.empty_inventory,
                          self.ansconfig.build_ansible_inventory())
@@ -44,5 +55,8 @@ class TestConfigBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
     @mock.patch('networking_ansible.config.cfg.ConfigParser',
                 MockedConfigParser)
     def test_build_ansible_inventory_w_hosts(self):
+        self.test_config_files = ['foo']
+        self.setup_config()
+
         self.assertEqual(self.inventory,
                          self.ansconfig.build_ansible_inventory())

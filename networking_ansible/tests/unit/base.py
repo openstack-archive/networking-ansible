@@ -16,7 +16,9 @@
 # under the License.
 
 from neutron.plugins.ml2 import driver_context
-from neutron.tests.unit.plugins.ml2 import test_plugin
+from oslo_config import cfg
+from oslotest import base
+import pbr
 from six.moves import mock
 
 from networking_ansible import ansible_networking
@@ -29,21 +31,42 @@ QUOTA_REGISTRIES = (
 )
 
 
-class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
+class BaseTestCase(base.BaseTestCase):
+    test_config_files = []
+    parse_config = True
+
+    def setUp(self):
+        super(BaseTestCase, self).setUp()
+        if self.parse_config:
+            self.setup_config()
+
+        self.ansconfig = config
+        self.testhost = 'testhost'
+        self.empty_inventory = {'all': {'hosts': {}}}
+        self.inventory = {'all': {'hosts': {self.testhost: {}}}}
+
+    def setup_config(self):
+        """Create the default configurations."""
+        version_info = pbr.version.VersionInfo('networking_ansible')
+        config_files = []
+        for conf in self.test_config_files:
+            config_files += ['--config-file', conf]
+        cfg.CONF(args=config_files,
+                 project='networking_ansible',
+                 version='%%(prog)s%s' % version_info.release_string())
+
+
+class NetworkingAnsibleTestCase(BaseTestCase):
     def setUp(self):
         # This is to avoid "No resource found" messages printed to stderr from
         # quotas Neutron code.
         for func in QUOTA_REGISTRIES:
             mock.patch(func).start()
         super(NetworkingAnsibleTestCase, self).setUp()
-        self.ansconfig = config
         self.mech = mech_driver.AnsibleMechanismDriver()
         self.mech.initialize()
-        self.testhost = 'testhost'
         self.testsegid = '37'
         self.testport = 'switchportid'
-        self.empty_inventory = {'all': {'hosts': {}}}
-        self.inventory = {'all': {'hosts': {self.testhost: {}}}}
 
         # Define mocked network context
         self.mock_net_context = mock.create_autospec(
