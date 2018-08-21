@@ -1,7 +1,7 @@
 .. _install:
 
-Install and configure
-~~~~~~~~~~~~~~~~~~~~~
+Install
+~~~~~~~
 
 This section describes how to install and configure the
 Ansible Networking ML2 Driver, code-named networking_ansible, on the controller node.
