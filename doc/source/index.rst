@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-==================================================
-Welcome to the documentation of networking_ansible
-==================================================
+===========================================
+Welcome to Networking-Ansible Documentation
+===========================================
 
 Contents:
 
@@ -14,11 +14,8 @@ Contents:
 
    readme
    install/index
-   contributor/index
-   configuration/index
-   cli/index
    user/index
-   admin/index
+   contributor/index
    reference/index
 
 Indices and tables
