@@ -1,13 +1,10 @@
 .. _install-rdo:
 
-Install and configure for Red Hat Enterprise Linux and CentOS
+Install for Red Hat Enterprise Linux, Fedora, and CentOS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This section describes how to install the Networking-Ansible ML2 Driver
+for Red Hat Enterprise Linux 7, Fedora, and CentOS 7.
 
-
-This section describes how to install and configure the Ansible Networking ML2 Driver
-for Red Hat Enterprise Linux 7 and CentOS 7.
-
-.. include:: common_prerequisites.rst
 
 Install and configure components
 --------------------------------
@@ -16,15 +13,4 @@ Install and configure components
 
    .. code-block:: console
 
-      # yum install networking-ansible
-
-.. include:: common_configure.rst
-
-Finalize installation
----------------------
-
-Restart the neutron-server service:
-
-.. code-block:: console
-
-   # systemctl restart neutron-server.service
+      # yum install python2-networking-ansible
