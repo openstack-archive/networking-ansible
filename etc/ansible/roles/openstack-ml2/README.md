@@ -12,7 +12,7 @@ Role Variables
 * junos_enable_netconf
 
 * segmenation_id
-* segmentation_name
+* segmentation_name (default depends on provider)
 
 Dependencies
 ------------

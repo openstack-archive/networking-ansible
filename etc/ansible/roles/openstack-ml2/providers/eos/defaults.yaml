@@ -1,0 +1,3 @@
+---
+ml2_segmentation_id: "{{ segmentation_id | default(1, True)}}"
+ml2_segmentation_name: '{{segmentation_name if segmentation_name else "default" if ml2_segmentation_id|string == "1" else "vlan"+segmentation_id|string }}'

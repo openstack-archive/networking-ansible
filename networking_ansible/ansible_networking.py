@@ -41,13 +41,6 @@ class AnsibleNetworking(object):
 
         See etc/ansible/roles/openstack-ml2/README.md for an exmaple playbook
         """
-        # TODO(radez): This is hard coded for juniper because
-        #       that was the initial vm we got running.
-        #       need to find out how to do this cross vendor
-        if segmentation_id == '1':
-            segmentation_name = 'default'
-        else:
-            segmentation_name = 'vlan{}'.format(segmentation_id)
 
         # build out the ansible playbook
         playbook = [{
@@ -61,7 +54,6 @@ class AnsibleNetworking(object):
                     'tasks_from': task,
                 },
                 'vars': {
-                    'segmentation_name': segmentation_name,
                     'segmentation_id': segmentation_id,
                 }
             }]
@@ -113,8 +105,8 @@ class AnsibleNetworking(object):
                                'device: {switch_name} from network {net_id} '
                                'reason: {exc}'}
 
-        # If segmentation ID is None, set vlan 1
-        segmentation_id = network['provider:segmentation_id'] or '1'
+        # If segmentation ID is None, its default is defined in ansible
+        segmentation_id = network['provider:segmentation_id'] or ''
 
         local_link_info = port['binding:profile'].get('local_link_information')
         if not local_link_info:
