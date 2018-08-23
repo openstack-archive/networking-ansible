@@ -14,14 +14,33 @@
 #    under the License.
 
 import mock
+import tempfile
 
+import fixtures
+from neutron.common import test_lib
 from neutron.plugins.ml2.common import exceptions as ml2_exc
+from neutron.tests.unit.plugins.ml2 import test_plugin
+from neutron_lib.api.definitions import provider_net
+import webob.exc
 
+from networking_ansible import ansible_networking as anet
 from networking_ansible.tests.unit import base
 
 
-@mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.vlan_access_port')
+class TestLibTestConfigFixture(fixtures.Fixture):
+    def __init__(self):
+        self._original_test_config = None
+
+    def _setUp(self):
+        self.addCleanup(self._restore)
+        self._original_test_config = test_lib.test_config.copy()
+
+    def _restore(self):
+        if self._original_test_config is not None:
+            test_lib.test_config = self._original_test_config
+
+
+@mock.patch.object(anet.AnsibleNetworking, 'vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestBindPort(base.NetworkingAnsibleTestCase):
@@ -78,8 +97,7 @@ class TestIsPortBound(base.NetworkingAnsibleTestCase):
             self.mech._is_port_bound(self.mock_port_context.current))
 
 
-@mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.create_network')
+@mock.patch.object(anet.AnsibleNetworking, 'create_network')
 class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_create_network_postcommit(self, mock_create_network):
         self.mech.create_network_postcommit(self.mock_net_context)
@@ -110,8 +128,7 @@ class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
         mock_create_netwrk.assert_not_called()
 
 
-@mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.delete_network')
+@mock.patch.object(anet.AnsibleNetworking, 'delete_network')
 class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_network_postcommit(self, mock_delete_network):
         self.mech.delete_network_postcommit(self.mock_net_context)
@@ -142,8 +159,7 @@ class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
-@mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.vlan_access_port')
+@mock.patch.object(anet.AnsibleNetworking, 'vlan_access_port')
 class TestDeletePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_port_postcommit_current(self,
                                             mock_vlan_access,
@@ -171,8 +187,7 @@ class TestInit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
-@mock.patch('networking_ansible.ansible_networking.'
-            'AnsibleNetworking.vlan_access_port')
+@mock.patch.object(anet.AnsibleNetworking, 'vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
@@ -198,3 +213,67 @@ class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
         mock_port_bound.side_effect = [False, False]
         self.mech.update_port_postcommit(self.mock_port_context)
         mock_vlan_access.assert_not_called()
+
+
+@mock.patch.object(anet.AnsibleNetworking, '_run_task')
+class TestML2PluginIntegration(test_plugin.Ml2PluginV2TestCase):
+    _mechanism_drivers = ['ansible']
+    HOST = 'testinghost'
+    config_content = {
+        'ansible:{:s}'.format(HOST): [
+            'ansible_network_os=provider\n',
+            'ansible_host=host_ip\n',
+            'ansible_user=user\n',
+            'ansible_pass=password\n',
+        ],
+    }
+
+    def setUp(self):
+        self.useFixture(TestLibTestConfigFixture())
+        self._configure()
+        super(TestML2PluginIntegration, self).setUp()
+        seg_id = self.vlan_range.split(':')[0]
+        self.network_spec = {
+            provider_net.PHYSICAL_NETWORK: self.physnet,
+            provider_net.NETWORK_TYPE: 'vlan',
+            provider_net.SEGMENTATION_ID: seg_id,
+            'arg_list': (
+                provider_net.PHYSICAL_NETWORK,
+                provider_net.NETWORK_TYPE,
+                provider_net.SEGMENTATION_ID,
+            ),
+            'admin_state_up': True
+        }
+
+    def _write_config_content(self):
+        for filename, (section, content) in zip(
+                test_lib.test_config['config_files'],
+                self.config_content.items()):
+            with open(filename, 'w') as f:
+                f.write("[{:s}]\n".format(section))
+                f.writelines(content)
+
+    def _configure(self):
+        """Create config for the mech driver."""
+        test_lib.test_config.setdefault('config_files', []).append(
+            tempfile.mktemp(prefix='test_anet'))
+        self._write_config_content()
+
+    def test_create_network_vlan(self, m_run_task):
+        self._create_network(self.fmt, 'tenant', **self.network_spec)
+        m_run_task.assert_called_once_with(
+            'create_network',
+            self.HOST,
+            int(self.network_spec[provider_net.SEGMENTATION_ID]))
+
+    def test_delete_network(self, m_run_task):
+        res = self._create_network(self.fmt, 'tenant', **self.network_spec)
+        m_run_task.reset_mock()
+        network = self.deserialize(self.fmt, res)
+        req = self.new_delete_request('networks', network['network']['id'])
+        res = req.get_response(self.api)
+        self.assertEqual(webob.exc.HTTPNoContent.code, res.status_int)
+        m_run_task.assert_called_once_with(
+            'delete_network',
+            self.HOST,
+            int(self.network_spec[provider_net.SEGMENTATION_ID]))
