@@ -29,6 +29,16 @@ QUOTA_REGISTRIES = (
 )
 
 
+def patch_neutron_quotas():
+    """Patch neutron quotas.
+
+    This is to avoid "No resource found" messages printed to stderr from
+    quotas Neutron code.
+    """
+    for func in QUOTA_REGISTRIES:
+        mock.patch(func).start()
+
+
 class BaseTestCase(base.BaseTestCase):
     test_config_files = []
     parse_config = True
@@ -57,10 +67,7 @@ class BaseTestCase(base.BaseTestCase):
 
 class NetworkingAnsibleTestCase(BaseTestCase):
     def setUp(self):
-        # This is to avoid "No resource found" messages printed to stderr from
-        # quotas Neutron code.
-        for func in QUOTA_REGISTRIES:
-            mock.patch(func).start()
+        patch_neutron_quotas()
         super(NetworkingAnsibleTestCase, self).setUp()
         self.mech = mech_driver.AnsibleMechanismDriver()
         self.mech.initialize()
