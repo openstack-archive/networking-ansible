@@ -20,6 +20,7 @@ import fixtures
 from neutron.common import test_lib
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.tests.unit.plugins.ml2 import test_plugin
+from neutron_lib.api.definitions import portbindings
 from neutron_lib.api.definitions import provider_net
 import webob.exc
 
@@ -225,6 +226,8 @@ class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
 class TestML2PluginIntegration(NetAnsibleML2Base):
     _mechanism_drivers = ['ansible']
     HOSTS = ['testinghost', 'otherhost']
+    CIDR = '10.0.0.0/24'
+
     config_content = {
         'ansible:{:s}'.format(host): [
             'ansible_network_os=provider\n',
@@ -233,6 +236,12 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             'ansible_pass=password\n',
         ] for host in HOSTS
     }
+
+    LOCAL_LINK_INFORMATION = [{
+        'switch_info': HOSTS[0],
+        'switch_id': 'foo',
+        'port_id': 'bar',
+    }]
 
     def setUp(self):
         self.useFixture(TestLibTestConfigFixture())
@@ -265,8 +274,13 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             self.filename)
         self._write_config_content()
 
+    def _create_network_with_spec(self, name, spec):
+        res = self._create_network(self.fmt, name, **spec)
+        network = self.deserialize(self.fmt, res)
+        return res, network
+
     def test_create_network_vlan(self, m_run_task):
-        res = self._create_network(self.fmt, 'tenant', **self.network_spec)
+        res, _ = self._create_network_with_spec('tenant', self.network_spec)
         self.assertEqual(webob.exc.HTTPCreated.code, res.status_int)
         expected_calls = [
             mock.call(
@@ -279,9 +293,9 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             m_run_task.call_args_list)
 
     def test_delete_network(self, m_run_task):
-        res = self._create_network(self.fmt, 'tenant', **self.network_spec)
+        res, network = self._create_network_with_spec('tenant',
+                                                      self.network_spec)
         m_run_task.reset_mock()
-        network = self.deserialize(self.fmt, res)
         req = self.new_delete_request('networks', network['network']['id'])
         res = req.get_response(self.api)
         self.assertEqual(webob.exc.HTTPNoContent.code, res.status_int)
@@ -294,3 +308,42 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
         self.assertItemsEqual(
             expected_calls,
             m_run_task.call_args_list)
+
+    def test_update_port_unbound(self, m_run_task):
+        unbound_port_spec = {
+            'device_owner': 'baremetal:none',
+            'device_id': 'some-id',
+        }
+
+        bind_port_update = {
+            'port': {
+                'binding:host_id': 'foo',
+                'binding:vnic_type': portbindings.VNIC_BAREMETAL,
+                'binding:profile': {
+                    'local_link_information': self.LOCAL_LINK_INFORMATION,
+                },
+            },
+        }
+
+        with self.network('tenant', **self.network_spec) as n:
+            with self.subnet(network=n, cidr=self.CIDR) as s:
+                with self.port(
+                        subnet=s,
+                        **unbound_port_spec
+                        ) as p:
+                    req = self.new_update_request(
+                        'ports',
+                        bind_port_update,
+                        p['port']['id'])
+                    self.deserialize(
+                        self.fmt, req.get_response(self.api))
+                    # TODO(jlibosva): Validate _run_task and return value
+
+    def test_delete_port(self, m_run_task):
+        pass
+
+    def test_create_port_with_host(self, m_run_task):
+        pass
+
+    def test_create_port_without_host(self, m_run_task):
+        pass
