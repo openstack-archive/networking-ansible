@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import mock
 import tempfile
 
@@ -20,6 +21,7 @@ import fixtures
 from neutron.common import test_lib
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.tests.unit.plugins.ml2 import test_plugin
+from neutron_lib.api.definitions import portbindings
 from neutron_lib.api.definitions import provider_net
 import webob.exc
 
@@ -225,13 +227,36 @@ class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
 class TestML2PluginIntegration(NetAnsibleML2Base):
     _mechanism_drivers = ['ansible']
     HOSTS = ['testinghost', 'otherhost']
-    config_content = {
+    CIDR = '10.0.0.0/24'
+
+    CONFIG_CONTENT = {
         'ansible:{:s}'.format(host): [
             'ansible_network_os=provider\n',
             'ansible_host=host_ip\n',
             'ansible_user=user\n',
             'ansible_pass=password\n',
         ] for host in HOSTS
+    }
+
+    LOCAL_LINK_INFORMATION = [{
+        'switch_info': HOSTS[0],
+        'switch_id': 'foo',
+        'port_id': 'bar',
+    }]
+
+    UNBOUND_PORT_SPEC = {
+        'device_owner': 'baremetal:none',
+        'device_id': 'some-id',
+    }
+
+    BIND_PORT_UPDATE = {
+        'port': {
+            'binding:host_id': 'foo',
+            'binding:vnic_type': portbindings.VNIC_BAREMETAL,
+            'binding:profile': {
+                'local_link_information': LOCAL_LINK_INFORMATION,
+            },
+        },
     }
 
     def setUp(self):
@@ -254,7 +279,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
 
     def _write_config_content(self):
         with open(self.filename, 'w') as f:
-            for section, content in self.config_content.items():
+            for section, content in self.CONFIG_CONTENT.items():
                 f.write("[{:s}]\n".format(section))
                 f.writelines(content)
                 f.write("\n")
@@ -265,8 +290,13 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             self.filename)
         self._write_config_content()
 
+    def _create_network_with_spec(self, name, spec):
+        res = self._create_network(self.fmt, name, **spec)
+        network = self.deserialize(self.fmt, res)
+        return res, network
+
     def test_create_network_vlan(self, m_run_task):
-        res = self._create_network(self.fmt, 'tenant', **self.network_spec)
+        res, _ = self._create_network_with_spec('tenant', self.network_spec)
         self.assertEqual(webob.exc.HTTPCreated.code, res.status_int)
         expected_calls = [
             mock.call(
@@ -279,9 +309,9 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             m_run_task.call_args_list)
 
     def test_delete_network(self, m_run_task):
-        res = self._create_network(self.fmt, 'tenant', **self.network_spec)
+        res, network = self._create_network_with_spec('tenant',
+                                                      self.network_spec)
         m_run_task.reset_mock()
-        network = self.deserialize(self.fmt, res)
         req = self.new_delete_request('networks', network['network']['id'])
         res = req.get_response(self.api)
         self.assertEqual(webob.exc.HTTPNoContent.code, res.status_int)
@@ -294,3 +324,52 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
         self.assertItemsEqual(
             expected_calls,
             m_run_task.call_args_list)
+
+    @contextlib.contextmanager
+    def _create_bound_port(self, m_run_task=None):
+        """Create a bound port in a network.
+
+        Network is created using self.network_spec defined in the setUp()
+        method of this class. Port attributes are degined in the
+        UNBOUND_PORT_SPEC and BIND_PORT_UPDATE class attributes.
+
+        If m_run_task argument is passed then its mock is reset before the port
+        update request to not contain the create request.
+
+        """
+        with self.network('tenant', **self.network_spec) as n:
+            with self.subnet(network=n, cidr=self.CIDR) as s:
+                with self.port(
+                        subnet=s,
+                        **self.UNBOUND_PORT_SPEC
+                        ) as p:
+                    req = self.new_update_request(
+                        'ports',
+                        self.BIND_PORT_UPDATE,
+                        p['port']['id'])
+                    if m_run_task:
+                        m_run_task.reset_mock()
+
+                    yield self.deserialize(
+                        self.fmt, req.get_response(self.api))
+
+    def test_update_port_unbound(self, m_run_task):
+        with self._create_bound_port(m_run_task) as port:
+            m_run_task.called_once_with(
+                'update_port',
+                self.HOSTS[0],
+                self.network_spec[provider_net.SEGMENTATION_ID],
+                self.LOCAL_LINK_INFORMATION[0]['port_id'])
+            self.assertNotEqual(
+                portbindings.VIF_TYPE_BINDING_FAILED,
+                port['port'][portbindings.VIF_TYPE])
+
+    def test_delete_port(self, m_run_task):
+        with self._create_bound_port() as port:
+            m_run_task.reset_mock()
+            self._delete('ports', port['port']['id'])
+            m_run_task.called_once_with(
+                'delete_port',
+                self.HOSTS[0],
+                self.network_spec[provider_net.SEGMENTATION_ID],
+                self.LOCAL_LINK_INFORMATION[0]['port_id'])
