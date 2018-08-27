@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import mock
 import tempfile
 
@@ -323,3 +324,56 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
         self.assertItemsEqual(
             expected_calls,
             m_run_task.call_args_list)
+
+    @contextlib.contextmanager
+    def _create_unbound_port(self):
+        """Create a bound port in a network.
+
+        Network is created using self.network_spec defined in the setUp()
+        method of this class. Port attributes are defined in the
+        UNBOUND_PORT_SPEC.
+
+        """
+        with self.network('tenant', **self.network_spec) as n:
+            with self.subnet(network=n, cidr=self.CIDR) as s:
+                with self.port(
+                        subnet=s,
+                        **self.UNBOUND_PORT_SPEC
+                        ) as p:
+                    yield p
+
+    def test_update_port_unbound(self, m_run_task):
+        with self._create_unbound_port() as p:
+            req = self.new_update_request(
+                'ports',
+                self.BIND_PORT_UPDATE,
+                p['port']['id'])
+            m_run_task.reset_mock()
+
+            port = self.deserialize(
+                self.fmt, req.get_response(self.api))
+            m_run_task.called_once_with(
+                'update_port',
+                self.HOSTS[0],
+                self.network_spec[provider_net.SEGMENTATION_ID],
+                self.LOCAL_LINK_INFORMATION[0]['port_id'])
+            self.assertNotEqual(
+                portbindings.VIF_TYPE_BINDING_FAILED,
+                port['port'][portbindings.VIF_TYPE])
+
+    def test_delete_port(self, m_run_task):
+        with self._create_unbound_port() as p:
+            req = self.new_update_request(
+                'ports',
+                self.BIND_PORT_UPDATE,
+                p['port']['id'])
+            port = self.deserialize(
+                self.fmt, req.get_response(self.api))
+            m_run_task.reset_mock()
+
+            self._delete('ports', port['port']['id'])
+            m_run_task.called_once_with(
+                'delete_port',
+                self.HOSTS[0],
+                self.network_spec[provider_net.SEGMENTATION_ID],
+                self.LOCAL_LINK_INFORMATION[0]['port_id'])
