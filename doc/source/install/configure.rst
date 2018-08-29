@@ -7,20 +7,6 @@ This section decribes how to configure Neutron configuration files to enable
 the networking-ansible ML2 driver and configure switch devices that will be
 managed by networking-ansible.
 
-#. Register the networking-ansible ML2 Driver with Neutron.
-
-    TODO(radez) is this done automatially when the egg code is installed?
-    Edit the entry_points.txt file. Add AnsibleMechanismDriver to the
-    neutron.ml2.mechanism_drivers section.
-
-    .. code-block:: ini
-
-        [neutron.ml2.mechanism_drivers]
-        ...
-        ansible = ansible_networking.ml2.mech_driver:AnsibleMechanismDriver
-        ...
-
-
 #. Configure type_drivers and mechanism_drivers and network_vlan_ranges.
 
     Add ``vlan`` to ``type_drivers``, ``ansible`` to ``mechanism_drivers``, and
@@ -52,16 +38,29 @@ managed by networking-ansible.
     .. code-block:: ini
 
       [ansible:myhostname]
-      ansible_network_os=vyos
+      ansible_network_os=junos
       ansible_host=10.10.2.250
       ansible_user=ansible
       ansible_pass=password
 
     * myhostname is an arbitrary internal identifier used only in ironic's link_local_information.
     * ansible_network_os is a valid Ansible Networking value to indicate switch type.
-      TODO(radez) enumerate what options are supported
+      Tested with networking-ansible: openvswitch, junos
+      Untested but valid with networking-ansible: eos, nxos
+      See contributor/provider for more information.
     * ansible_host is the IP address or hostname used to connect to the switch.
-    * ansible_user and pass are credentials used to connect to the switch.
+    * ansible_user username of the credentials used to connect to the switch.
+    * ansible_pass password of the credentials used to connect to the switch.
+
+    Additional available parameters:
+
+    .. code-block:: ini
+
+      ansible_ssh_private_key_file=/path/to/ansible-ssh
+      manage_vlans=True
+
+    * ansible_ssh_private_key_file can be used as an alternative to ansible_pass
+      to use ssh key authentication instead of password authentication.
     * manage_vlans is optional and defaults to True. Set this to False for a
       switch if networking-ansible should not create and delete VLANs on the device.
 

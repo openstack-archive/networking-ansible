@@ -1,14 +1,19 @@
 Install and configure
 ~~~~~~~~~~~~~~~~~~~~~
 
-This section describes how to install and configure the
-Ansible Networking ML2 Driver, code-named networking_ansible, on the controller node.
-
+This section describes how to install and configure the networking-ansible
+ML2 Driver, code-named networking-ansible, on the controller node.
 This section assumes that you already have a working OpenStack
-environment with at least the following components installed:
-.. (add the appropriate services here and further notes)
+environment with Neutron server included.
 
-Note that installation and configuration vary by distribution.
+
+.. note::
+
+   Perform installation configuration steps on each controller node that has a neturon server running.
+
+.. note::
+
+   Installation and configuration may vary by distribution.
 
 .. toctree::
    :maxdepth: 2
@@ -19,7 +24,6 @@ Note that installation and configuration vary by distribution.
    verify.rst
    next-steps.rst
 
-This chapter assumes a working setup of OpenStack following the
-`OpenStack Installation Tutorial
-<https://docs.openstack.org/project-install-guide/rocky/>`_.
+This chapter assumes a working setup of OpenStack that includes Neutron server following the
+`OpenStack Installation Tutorial <https://docs.openstack.org/project-install-guide/rocky/>`_.
 
