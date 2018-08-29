@@ -7,7 +7,8 @@
 Welcome to Networking-Ansible Documentation
 ===========================================
 
-Contents:
+Contents
+~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
