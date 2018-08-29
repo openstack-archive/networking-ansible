@@ -22,26 +22,26 @@ networking-ansible.
 
 * defaults.yaml
 
-   Defines default values for segmentation name and ID. For example some
-   switch vendors use the name "default" and VLAN ID 1 as a default VLAN
-   to assign switchports to. Open vSwitch expects no VLAN ID and VLAN name
-   in the case that port is not assigned to a specific VLAN.
+Defines default values for segmentation name and ID. For example some
+switch vendors use the name "default" and VLAN ID 1 as a default VLAN
+to assign switchports to. Open vSwitch expects no VLAN ID and VLAN name
+in the case that port is not assigned to a specific VLAN.
 
 * create_network.yaml
 
-   Defines the Ansible tasks to create a VLAN on a switch.
+Defines the Ansible tasks to create a VLAN on a switch.
 
 * delete_network.yaml
 
-   Defines the Ansible tasks to delete a VLAN on a switch.
+Defines the Ansible tasks to delete a VLAN on a switch.
 
 * update_port.yaml
 
-   Defines the Ansible tasks to assign a VLAN to a switchport in access mode.
+Defines the Ansible tasks to assign a VLAN to a switchport in access mode.
 
 * delete_port.yaml
 
-   Defines the Ansible tasks to remove configuration from a switchport.
+Defines the Ansible tasks to remove configuration from a switchport.
 
 [1] https://docs.ansible.com/ansible/2.5/modules/list_of_network_modules.html
 

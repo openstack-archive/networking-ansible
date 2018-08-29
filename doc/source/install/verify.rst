@@ -3,11 +3,7 @@
 Verify operation
 ~~~~~~~~~~~~~~~~
 
-Verify operation of the Ansible Networking ML2 Driver service.
-
-.. note::
-
-   Perform these commands on the controller node.
+Verify operation of the networking-ansible ML2 Driver service.
 
 #. Grep the neutron logs for ansible and confirm the driver has been registered and configured.
    root access CLI commands:
