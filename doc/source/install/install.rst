@@ -3,14 +3,14 @@
 Install
 ~~~~~~~
 
-This section describes how to install and configure the
-Ansible Networking ML2 Driver, code-named networking_ansible, on the controller node.
+This section describes how to install and configure the Networking-Ansible
+Driver, code-named networking_ansible, on the controller node. This section
+assumes that you already have a working OpenStack environment with Neutron
+configured to provide VLAN tenant networking.
 
-This section assumes that you already have a working OpenStack
-environment with at least the following components installed:
-.. (add the appropriate services here and further notes)
+.. note::
 
-Note that installation and configuration vary by distribution.
+   Note that installation and configuration may vary by distribution.
 
 .. toctree::
    :maxdepth: 2
@@ -18,3 +18,4 @@ Note that installation and configuration vary by distribution.
    install-obs.rst
    install-rdo.rst
    install-ubuntu.rst
+   install-pip.rst
