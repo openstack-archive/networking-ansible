@@ -207,37 +207,27 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         can use with ports.
         """
         port = context.current
-        binding_profile = port['binding:profile']
-        local_link_info = binding_profile.get('local_link_information')
         # Validate port and local link info
-        if not (self._is_port_supported(port) and local_link_info):
-            # TODO(radez) log debug messages here
+        if 'local_link_information' not in port['binding:profile']:
+            LOG.debug(
+                "local_link_information is missing in port binding:profile")
+            return
+        if not self._is_port_supported(port):
+            LOG.debug(
+                "Port %s has vnic_type set to %s which is not correct to work "
+                "with networking-ansible driver.", port['id'],
+                port[portbindings.VNIC_TYPE])
             return
 
-        switch_name = local_link_info[0].get('switch_info')
-        switch_port = local_link_info[0].get('port_id')
-
-        network = context.network.current
-        # If segmentation ID is None, vlan will be set to 1
-        segmentation_id = network['provider:segmentation_id'] or '1'
         segments = context.segments_to_bind
 
         provisioning_blocks.add_provisioning_component(
             context._plugin_context, port['id'], resources.PORT,
             ANSIBLE_NETWORKING_ENTITY)
-        LOG.debug("Putting port {port} on {switch_name} to vlan: "
-                  "{segmentation_id}".format(
-                      port=switch_port,
-                      switch_name=switch_name,
-                      segmentation_id=segmentation_id))
+
         # Assign port to network
         self.ansnet.vlan_access_port('assign', context.current,
                                      context.network.current)
-        LOG.info("Successfully bound port {port_id} in segment "
-                 "{segment_id} on host {host}".format(
-                     port_id=port['id'],
-                     host=switch_name,
-                     segment_id=segmentation_id))
         context.set_binding(segments[0][api.ID],
                             portbindings.VIF_TYPE_OTHER, {})
 
