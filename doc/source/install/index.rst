@@ -8,10 +8,6 @@ environment with Neutron server included.
 
 Perform installation configuration steps on each controller node that has a Neutron server running.
 
-.. note::
-
-   Installation and configuration may vary by distribution.
-
 .. toctree::
    :maxdepth: 2
 
@@ -21,6 +17,11 @@ Perform installation configuration steps on each controller node that has a Neut
    verify.rst
    next-steps.rst
 
-This chapter assumes a working setup of OpenStack that includes Neutron server following the
-`OpenStack Installation Tutorial <https://docs.openstack.org/project-install-guide/rocky/>`_.
+.. note::
+
+   Installation and configuration may vary by distribution.
+
+This chapter assumes a working setup of OpenStack that includes Neutron server.
+For guides to assist in installing and deploying OpenStack visit
+`OpenStack Docs <https://docs.openstack.org/>`_.
 

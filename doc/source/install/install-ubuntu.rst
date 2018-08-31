@@ -5,8 +5,8 @@ Install for Ubuntu
 This section describes how to install the Networking-ansible ML2 Driver
 for Ubuntu 14.04 (LTS).
 
-Install and configure components
---------------------------------
+Install components
+------------------
 
 #. Install the packages:
 
