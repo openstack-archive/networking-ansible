@@ -6,8 +6,8 @@ This section describes how to install the Networking-Ansible ML2 Driver
 for Red Hat Enterprise Linux 7, Fedora, and CentOS 7.
 
 
-Install and configure components
---------------------------------
+Install components
+------------------
 
 #. Install the packages:
 

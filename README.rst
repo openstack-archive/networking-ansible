@@ -27,7 +27,11 @@ The Networking-Ansible ML2 Driver consists of the following components:
 
 Use Cases
 ---------
-Ironic Baremetal Guests
+``Ironic Baremetal Guest Deployment``
+
+Ironic uses Networking-Ansible to configure the switch ports for the baremetal guests.
+Ironic needs to swap the port a baremetal guest is connected to between the
+Ironic provisioning network and the tenant VLAN that the guest is assigned.
 
 Features
 --------
