@@ -61,17 +61,9 @@ pygments_style = 'sphinx'
 # html_theme_path = ["."]
 # html_theme = '_theme'
 # html_static_path = ['static']
-#try:
-    # The openstack theme is much closer to rtd theme
-    # but getting an error when using rtd theme locally
-    # putting this here to use openstack locally and
-    # rtd theme on readthedocs.io
-    # intention is to remove this once the local rtd theme is sorted out
-#    import openstackdocstheme
 html_theme = 'openstackdocs'
+# It works with RTD this way for some reason.
 extensions.append('openstackdocstheme')
-#except:
-#    html_theme = 'default'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
