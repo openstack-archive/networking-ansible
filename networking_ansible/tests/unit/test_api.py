@@ -21,16 +21,16 @@ from networking_ansible.tests.unit import base
 
 class TestCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
 
-    @mock.patch('networking_ansible.ansible_networking'
-                '.AnsibleNetworking._run_task')
+    @mock.patch('networking_ansible.api'
+                '.NetworkingAnsible._run_task')
     def test_create_network(self, mock_run_task):
         self.mech.ansnet.create_network(self.testhost, self.testsegid)
         mock_run_task.assert_called_once_with('create_network',
                                               self.testhost,
                                               self.testsegid)
 
-    @mock.patch('networking_ansible.ansible_networking'
-                '.AnsibleNetworking._run_task')
+    @mock.patch('networking_ansible.api'
+                '.NetworkingAnsible._run_task')
     def test_delete_network(self, mock_run_task):
         self.mech.ansnet.delete_network(self.testhost, self.testsegid)
         mock_run_task.assert_called_once_with('delete_network',
@@ -38,7 +38,7 @@ class TestCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
                                               self.testsegid)
 
 
-@mock.patch('networking_ansible.ansible_networking.ansible_runner')
+@mock.patch('networking_ansible.api.ansible_runner')
 class TestRunTask(base.NetworkingAnsibleTestCase):
     def test_run_task_no_switchport(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
@@ -86,8 +86,8 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
                           'fake_switchport')
 
 
-@mock.patch('networking_ansible.ansible_networking'
-            '.AnsibleNetworking._run_task')
+@mock.patch('networking_ansible.api'
+            '.NetworkingAnsible._run_task')
 class TestVlanAccessPort(base.NetworkingAnsibleTestCase):
 
     def test_assign_vlan_access_port(self, mock_run_task):

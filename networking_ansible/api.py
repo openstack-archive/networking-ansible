@@ -21,7 +21,7 @@ from networking_ansible import exceptions
 LOG = logging.getLogger(__name__)
 
 
-class AnsibleNetworking(object):
+class NetworkingAnsible(object):
     """Object to invoke ansible_runner to call Ansible Networking
 
     Hold inventory and provide an interface for calling
