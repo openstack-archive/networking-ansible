@@ -17,3 +17,6 @@ import pbr.version
 
 __version__ = pbr.version.VersionInfo(
     'networking-ansible').version_string()
+
+# Expose Python API
+from .api import NetworkingAnsible

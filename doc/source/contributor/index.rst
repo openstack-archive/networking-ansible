@@ -7,4 +7,3 @@
 
    contributing
    provider
-
