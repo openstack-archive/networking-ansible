@@ -1,7 +1,7 @@
 .. _verify:
 
-Verify operation
-~~~~~~~~~~~~~~~~
+Verify ML2 operation
+~~~~~~~~~~~~~~~~~~~~
 
 Verify operation of the networking-ansible ML2 Driver service.
 

@@ -19,7 +19,7 @@ from oslo_config import cfg
 from oslotest import base
 import pbr
 
-from networking_ansible import ansible_networking
+from networking_ansible import api
 from networking_ansible import config
 from networking_ansible.ml2 import mech_driver
 
@@ -108,4 +108,4 @@ class NetworkingAnsibleTestCase(BaseTestCase):
             self.mock_port_context.network.current
         ]
 
-        self.mech.ansnet = ansible_networking.AnsibleNetworking(self.inventory)
+        self.mech.ansnet = api.NetworkingAnsible(self.inventory)

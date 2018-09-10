@@ -25,7 +25,7 @@ from neutron_lib.api.definitions import portbindings
 from neutron_lib.api.definitions import provider_net
 import webob.exc
 
-from networking_ansible import ansible_networking as anet
+from networking_ansible import api
 from networking_ansible import exceptions
 from networking_ansible.tests.unit import base
 
@@ -49,7 +49,7 @@ class NetAnsibleML2Base(test_plugin.Ml2PluginV2TestCase):
         super(NetAnsibleML2Base, self).setUp()
 
 
-@mock.patch.object(anet.AnsibleNetworking, 'vlan_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestBindPort(base.NetworkingAnsibleTestCase):
@@ -106,7 +106,7 @@ class TestIsPortBound(base.NetworkingAnsibleTestCase):
             self.mech._is_port_bound(self.mock_port_context.current))
 
 
-@mock.patch.object(anet.AnsibleNetworking, 'create_network')
+@mock.patch.object(api.NetworkingAnsible, 'create_network')
 class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_create_network_postcommit(self, mock_create_network):
         self.mech.create_network_postcommit(self.mock_net_context)
@@ -137,7 +137,7 @@ class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
         mock_create_netwrk.assert_not_called()
 
 
-@mock.patch.object(anet.AnsibleNetworking, 'delete_network')
+@mock.patch.object(api.NetworkingAnsible, 'delete_network')
 class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_network_postcommit(self, mock_delete_network):
         self.mech.delete_network_postcommit(self.mock_net_context)
@@ -168,7 +168,7 @@ class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
-@mock.patch.object(anet.AnsibleNetworking, 'vlan_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'vlan_access_port')
 class TestDeletePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_port_postcommit_current(self,
                                             mock_vlan_access,
@@ -196,7 +196,7 @@ class TestInit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
-@mock.patch.object(anet.AnsibleNetworking, 'vlan_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'vlan_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
@@ -224,7 +224,7 @@ class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
         mock_vlan_access.assert_not_called()
 
 
-@mock.patch.object(anet.AnsibleNetworking, '_run_task')
+@mock.patch.object(api.NetworkingAnsible, '_run_task')
 class TestML2PluginIntegration(NetAnsibleML2Base):
     _mechanism_drivers = ['ansible']
     HOSTS = ['testinghost', 'otherhost']
