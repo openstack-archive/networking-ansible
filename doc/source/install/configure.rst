@@ -1,7 +1,7 @@
 .. _configure:
 
-Configure
-~~~~~~~~~
+ML2 Configuriation
+~~~~~~~~~~~~~~~~~~
 
 This section decribes how to configure Neutron configuration files to enable
 the networking-ansible ML2 driver and configure switch devices that will be
