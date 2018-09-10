@@ -1,9 +1,9 @@
 Prerequisites
 -------------
 
-To successfully install and configure the Networking-Ansible ML2 Driver, you
-will need a few prerequisites. Collecting this information and ensuring these
-resources are available will ensure a successful installation.
+To successfully install and configure the Networking-Ansible library, you
+will possibly need a few prerequisites. Collecting this information and ensuring
+these resources are available will ensure a successful installation.
 
 #. Switch credentials that allow configuration changes to the ports that the
    deployed baremetal guests are connected to.
@@ -16,9 +16,13 @@ resources are available will ensure a successful installation.
    a VLAN to that port. It will optionally need access to create VLANs if
    you choose not to predefine the VLANs that will be used.
 
-#. OpenStack must be installed with Neutron configured to provide VLAN tenant
+#. If you plan to configure networking-ansible as an ML2 driver in OpenStack,
+   OpenStack must be installed with Neutron configured to provide VLAN tenant
    networking.
 
    This prerequisite is currently outside the scope of this document. Please
    refer to Neutron's documentation or other guides to provide VLAN tenant
    networking.
+
+   For guides to assist in installing and deploying OpenStack visit
+   `OpenStack Docs <https://docs.openstack.org/>`_.

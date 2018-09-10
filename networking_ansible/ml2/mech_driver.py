@@ -17,10 +17,10 @@ from neutron.db import provisioning_blocks
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron_lib.api.definitions import portbindings
 from neutron_lib.callbacks import resources
-from neutron_lib.plugins.ml2 import api
+from neutron_lib.plugins.ml2 import api as ml2api
 from oslo_log import log as logging
 
-from networking_ansible import ansible_networking
+from networking_ansible import api
 from networking_ansible import config
 
 LOG = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 ANSIBLE_NETWORKING_ENTITY = 'ANSIBLENETWORKING'
 
 
-class AnsibleMechanismDriver(api.MechanismDriver):
+class AnsibleMechanismDriver(ml2api.MechanismDriver):
     """ML2 Mechanism Driver for Ansible Networking
 
     https://www.ansible.com/integrations/networks
@@ -38,7 +38,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         LOG.debug("Initializing Ansible ML2 driver")
 
         inventory = config.build_ansible_inventory()
-        self.ansnet = ansible_networking.AnsibleNetworking(inventory)
+        self.ansnet = api.NetworkingAnsible(inventory)
 
     def create_network_postcommit(self, context):
         """Create a network.
@@ -228,7 +228,7 @@ class AnsibleMechanismDriver(api.MechanismDriver):
         # Assign port to network
         self.ansnet.vlan_access_port('assign', context.current,
                                      context.network.current)
-        context.set_binding(segments[0][api.ID],
+        context.set_binding(segments[0][ml2api.ID],
                             portbindings.VIF_TYPE_OTHER, {})
 
     @staticmethod

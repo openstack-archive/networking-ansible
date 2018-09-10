@@ -4,9 +4,9 @@ Install
 ~~~~~~~
 
 This section describes how to install and configure the Networking-Ansible
-Driver, code-named networking_ansible, on the controller node. This section
-assumes that you already have a working OpenStack environment with Neutron
-configured to provide VLAN tenant networking.
+library, code-named networking_ansible. If you plan to use the library as an
+ML2 driver in OpenStack, this section assumes that you already have a working
+OpenStack environment with Neutron configured to provide VLAN tenant networking.
 
 .. note::
 
