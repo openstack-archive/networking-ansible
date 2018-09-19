@@ -78,6 +78,17 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
                                          [0]['vars']['port_description'])
 
     def test_run_task_failures(self, mock_ans_runner):
+        mock_result = mock_ans_runner.run.return_value
+        mock_result.status = 'failed'
+        self.assertRaises(exceptions.AnsibleRunnerException,
+                          self.mech.ansnet._run_task,
+                          'fake_task',
+                          self.testhost,
+                          self.testsegid,
+                          'fake_switchport')
+
+        mock_result.status = ''
+        mock_result.stats = {'failures': ['I got some failure']}
         self.assertRaises(exceptions.AnsibleRunnerException,
                           self.mech.ansnet._run_task,
                           'fake_task',
