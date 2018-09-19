@@ -42,7 +42,7 @@ class TestCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
 class TestRunTask(base.NetworkingAnsibleTestCase):
     def test_run_task_no_switchport(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
-        mock_result.stats = {'failures': []}
+        mock_result.stats = {}
 
         self.mech.ansnet._run_task('fake_task',
                                    self.testhost,
@@ -60,7 +60,7 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
 
     def test_run_task_w_switchport(self, mock_ans_runner):
         mock_result = mock_ans_runner.run.return_value
-        mock_result.stats = {'failures': []}
+        mock_result.stats = {}
 
         self.mech.ansnet._run_task('fake_task',
                                    self.testhost,
@@ -78,6 +78,17 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
                                          [0]['vars']['port_description'])
 
     def test_run_task_failures(self, mock_ans_runner):
+        mock_result = mock_ans_runner.run.return_value
+        mock_result.status = 'failed'
+        self.assertRaises(exceptions.AnsibleRunnerException,
+                          self.mech.ansnet._run_task,
+                          'fake_task',
+                          self.testhost,
+                          self.testsegid,
+                          'fake_switchport')
+
+        mock_result.status = ''
+        mock_result.stats = {'failures': []}
         self.assertRaises(exceptions.AnsibleRunnerException,
                           self.mech.ansnet._run_task,
                           'fake_task',
