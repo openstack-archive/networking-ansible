@@ -74,8 +74,8 @@ class AnsibleNetworking(object):
         result = ansible_runner.run(playbook=playbook,
                                     inventory=self.inventory,
                                     settings={'pexpect_use_poll': False})
-        failures = result.stats['failures']
-        if failures:
+        if result.status == 'failed' or \
+                (result.stats and result.stats.get('failures', [])):
             raise exceptions.AnsibleRunnerException(' '.join(result.stdout))
         return result
 
