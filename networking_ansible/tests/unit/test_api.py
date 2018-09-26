@@ -24,18 +24,18 @@ class TestCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
     @mock.patch('networking_ansible.api'
                 '.NetworkingAnsible._run_task')
     def test_create_network(self, mock_run_task):
-        self.mech.ansnet.create_network(self.testhost, self.testsegid)
+        self.mech.ansnet.create_vlan(self.testhost, self.testsegid)
         mock_run_task.assert_called_once_with('create_network',
                                               self.testhost,
-                                              self.testsegid)
+                                              vlan_id=self.testsegid)
 
     @mock.patch('networking_ansible.api'
                 '.NetworkingAnsible._run_task')
     def test_delete_network(self, mock_run_task):
-        self.mech.ansnet.delete_network(self.testhost, self.testsegid)
+        self.mech.ansnet.delete_vlan(self.testhost, self.testsegid)
         mock_run_task.assert_called_once_with('delete_network',
                                               self.testhost,
-                                              self.testsegid)
+                                              vlan_id=self.testsegid)
 
 
 @mock.patch('networking_ansible.api.ansible_runner')
@@ -45,8 +45,7 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
         mock_result.stats = {'failures': []}
 
         self.mech.ansnet._run_task('fake_task',
-                                   self.testhost,
-                                   self.testsegid)
+                                   self.testhost)
         # Assert switch_port is not set
         self.assertNotIn('port_name',
                          mock_ans_runner.run.call_args[1]['playbook'][0]
@@ -64,16 +63,16 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
 
         self.mech.ansnet._run_task('fake_task',
                                    self.testhost,
-                                   self.testsegid,
-                                   'fake_switchport')
+                                   self.testport,
+                                   self.testsegid)
         # Assert switch_port is set
         self.assertEqual(
-            'fake_switchport',
+            self.testport,
             mock_ans_runner.run.call_args[1]['playbook'][0]['tasks']
                                          [0]['vars']['port_name'])
         # Assert switch_port is set
         self.assertEqual(
-            'fake_switchport',
+            self.testport,
             mock_ans_runner.run.call_args[1]['playbook'][0]['tasks']
                                          [0]['vars']['port_description'])
 
@@ -93,8 +92,8 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
                           self.mech.ansnet._run_task,
                           'fake_task',
                           self.testhost,
-                          self.testsegid,
-                          'fake_switchport')
+                          'fake_switchport',
+                          self.testsegid)
 
 
 @mock.patch('networking_ansible.api'
@@ -102,35 +101,22 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
 class TestVlanAccessPort(base.NetworkingAnsibleTestCase):
 
     def test_assign_vlan_access_port(self, mock_run_task):
-        self.mech.ansnet.vlan_access_port('assign',
-                                          self.mock_port_context.current,
-                                          self.mock_net_context.current)
+        self.mech.ansnet.update_access_port(self.testhost,
+                                            self.testport,
+                                            self.testsegid)
         mock_run_task.assert_called_once_with('update_port',
                                               self.testhost,
-                                              self.testsegid,
-                                              self.testport)
+                                              self.testport,
+                                              self.testsegid)
 
     def test_remove_vlan_access_port(self, mock_run_task):
-        self.mech.ansnet.vlan_access_port('remove',
-                                          self.mock_port_context.current,
-                                          self.mock_net_context.current)
+        self.mech.ansnet.delete_port(self.testhost, self.testport)
         mock_run_task.assert_called_once_with('delete_port',
                                               self.testhost,
-                                              self.testsegid,
                                               self.testport)
-
-    def test_remove_vlan_access_port_wo_link_local(self, mock_run_task):
-        port = self.mock_port_context.current
-        del port['binding:profile']['local_link_information']
-        self.mech.ansnet.vlan_access_port('remove',
-                                          self.mock_port_context.current,
-                                          self.mock_net_context.current)
-        mock_run_task.assert_not_called()
 
     def test_remove_vlan_access_port_raises(self, mock_run_task):
         mock_run_task.side_effect = exceptions.AnsibleRunnerException('test')
         self.assertRaises(exceptions.AnsibleRunnerException,
-                          self.mech.ansnet.vlan_access_port,
-                          'remove',
-                          self.mock_port_context.current,
-                          self.mock_net_context.current)
+                          self.mech.ansnet.delete_port,
+                          self.testhost, self.testport)

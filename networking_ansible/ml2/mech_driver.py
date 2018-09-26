@@ -22,6 +22,8 @@ from oslo_log import log as logging
 
 from networking_ansible import api
 from networking_ansible import config
+from networking_ansible.ml2 import exceptions
+
 
 LOG = logging.getLogger(__name__)
 
@@ -66,7 +68,7 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                 if host.get('manage_vlans', True):
                     # Create VLAN on the switch
                     try:
-                        self.ansnet.create_network(host_name, segmentation_id)
+                        self.ansnet.create_vlan(host_name, segmentation_id)
                         LOG.info('Network {net_id} has been added on ansible '
                                  'host {host}'.format(
                                      net_id=network['id'],
@@ -109,7 +111,7 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                 if host.get('manage_vlans', True):
                     # Delete VLAN on the switch
                     try:
-                        self.ansnet.delete_network(host_name, segmentation_id)
+                        self.ansnet.delete_vlan(host_name, segmentation_id)
                         LOG.info('Network {net_id} has been deleted on '
                                  'ansible host {host}'.format(
                                      net_id=network['id'],
@@ -137,16 +139,45 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         state. It is up to the mechanism driver to ignore state or
         state changes that it does not know or care about.
         """
-        port = context.network.current
+        # Validate current locallink info
+        # Raises a LocalLink error if invalid
+        AnsibleMechanismDriver._link_info_from_port(context.current)
+
         if self._is_port_bound(context.current):
+            port = context.current
             provisioning_blocks.provisioning_complete(
                 context._plugin_context, port['id'], resources.PORT,
                 ANSIBLE_NETWORKING_ENTITY)
         elif self._is_port_bound(context.original):
+            port = context.original
+            network = context.network.current
+            switch_name, switch_port, segmentation_id = \
+                AnsibleMechanismDriver._link_info_from_port(context.original,
+                                                            network)
+
+            LOG.debug('Unplugging port {switch_port} on '
+                      '{switch_name} from vlan: {segmentation_id}'.format(
+                          switch_port=switch_port,
+                          switch_name=switch_name,
+                          segmentation_id=segmentation_id))
             # The port has been unbound. This will cause the local link
             # information to be lost, so remove the port from the network on
             # the switch now while we have the required information.
-            self.ansnet.vlan_access_port('remove', context.original, port)
+            try:
+                self.ansnet.delete_port(switch_name, switch_port)
+                LOG.info('Port {neutron_port} has been unplugged from '
+                         'network {net_id} on device {switch_name}'.format(
+                             neutron_port=port['id'],
+                             net_id=network['id'],
+                             switch_name=switch_name))
+            except Exception as e:
+                LOG.error('Failed to unplug port {neutron_port} on '
+                          'device: {switch_name} from network {net_id} '
+                          'reason: {exc}'.format(
+                              neutron_port=port['id'],
+                              net_id=network['id'],
+                              switch_name=switch_name,
+                              exc=e))
 
     def delete_port_postcommit(self, context):
         """Delete a port.
@@ -160,10 +191,31 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         expected, and will not prevent the resource from being
         deleted.
         """
+        port = context.current
+        network = context.network.current
         if self._is_port_bound(context.current):
-            self.ansnet.vlan_access_port('remove',
-                                         context.current,
-                                         context.network.current)
+            switch_name, switch_port, segmentation_id = \
+                AnsibleMechanismDriver._link_info_from_port(port, network)
+            LOG.debug('Unplugging port {switch_port} on '
+                      '{switch_name} from vlan: {segmentation_id}'.format(
+                          switch_port=switch_port,
+                          switch_name=switch_name,
+                          segmentation_id=segmentation_id))
+            try:
+                self.ansnet.delete_port(switch_name, switch_port)
+                LOG.info('Port {neutron_port} has been unplugged from '
+                         'network {net_id} on device {switch_name}'.format(
+                             neutron_port=port['id'],
+                             net_id=network['id'],
+                             switch_name=switch_name))
+            except Exception as e:
+                LOG.error('Failed to unplug port {neutron_port} on '
+                          'device: {switch_name} from network {net_id} '
+                          'reason: {exc}'.format(
+                              neutron_port=port['id'],
+                              net_id=network['id'],
+                              switch_name=switch_name,
+                              exc=e))
 
     def bind_port(self, context):
         """Attempt to bind a port.
@@ -207,29 +259,48 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         can use with ports.
         """
         port = context.current
-        # Validate port and local link info
-        if 'local_link_information' not in port['binding:profile']:
-            LOG.debug(
-                "local_link_information is missing in port binding:profile")
-            return
+        network = context.network.current
+        switch_name, switch_port, segmentation_id = \
+            AnsibleMechanismDriver._link_info_from_port(port, network)
         if not self._is_port_supported(port):
-            LOG.debug(
-                "Port %s has vnic_type set to %s which is not correct to work "
-                "with networking-ansible driver.", port['id'],
-                port[portbindings.VNIC_TYPE])
+            LOG.debug('Port {} has vnic_type set to %s which is not correct '
+                      'to work with networking-ansible driver.'.format(
+                          port['id'],
+                          port[portbindings.VNIC_TYPE]))
             return
 
         segments = context.segments_to_bind
+
+        LOG.debug('Plugging in port {switch_port} on '
+                  '{switch_name} to vlan: {segmentation_id}'.format(
+                      switch_port=switch_port,
+                      switch_name=switch_name,
+                      segmentation_id=segmentation_id))
 
         provisioning_blocks.add_provisioning_component(
             context._plugin_context, port['id'], resources.PORT,
             ANSIBLE_NETWORKING_ENTITY)
 
         # Assign port to network
-        self.ansnet.vlan_access_port('assign', context.current,
-                                     context.network.current)
-        context.set_binding(segments[0][ml2api.ID],
-                            portbindings.VIF_TYPE_OTHER, {})
+        try:
+            self.ansnet.update_access_port(switch_name,
+                                           switch_port,
+                                           segmentation_id)
+            context.set_binding(segments[0][ml2api.ID],
+                                portbindings.VIF_TYPE_OTHER, {})
+            LOG.info('Port {neutron_port} has been plugged into '
+                     'network {net_id} on device {switch_name}'.format(
+                         neutron_port=port['id'],
+                         net_id=network['id'],
+                         switch_name=switch_name))
+        except Exception as e:
+            LOG.error('Failed to plug in port {neutron_port} on '
+                      'device: {switch_name} from network {net_id} '
+                      'reason: {exc}'.format(
+                          neutron_port=port['id'],
+                          net_id=network['id'],
+                          switch_name=switch_name,
+                          exc=e))
 
     @staticmethod
     def _is_port_supported(port):
@@ -257,3 +328,17 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
 
         vif_type = port[portbindings.VIF_TYPE]
         return vif_type == portbindings.VIF_TYPE_OTHER
+
+    @staticmethod
+    def _link_info_from_port(port, network={}):
+        # Validate port and local link info
+        local_link_info = port['binding:profile'].get('local_link_information')
+        if not local_link_info:
+            msg = 'local_link_information is missing in port {port_id} ' \
+                  'binding:profile'.format(port_id=port['id'])
+            LOG.debug(msg)
+            raise exceptions.LocalLinkInfoMissingException(msg)
+        switch_name = local_link_info[0].get('switch_info')
+        switch_port = local_link_info[0].get('port_id')
+        segmentation_id = network.get('provider:segmentation_id', '')
+        return switch_name, switch_port, segmentation_id
