@@ -1,4 +1,4 @@
-# Copyright (c) 2018 OpenStack Foundation
+# Copyright (c) 2018 Red Hat Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,7 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron_lib._i18n import _
+from neutron_lib import exceptions
 
-class AnsibleRunnerException(Exception):
+
+class LocalLinkInfoMissingException(exceptions.NeutronException):
+    message = _('%(stdout)s')
+
     def __init__(self, message):
-        super(AnsibleRunnerException, self).__init__(message)
+        super(LocalLinkInfoMissingException, self).__init__(stdout=message)
