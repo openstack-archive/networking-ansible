@@ -27,6 +27,7 @@ import webob.exc
 
 from networking_ansible import api
 from networking_ansible import exceptions
+from networking_ansible.ml2 import exceptions as netans_ml2exc
 from networking_ansible.tests.unit import base
 
 
@@ -49,32 +50,34 @@ class NetAnsibleML2Base(test_plugin.Ml2PluginV2TestCase):
         super(NetAnsibleML2Base, self).setUp()
 
 
-@mock.patch.object(api.NetworkingAnsible, 'vlan_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'update_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestBindPort(base.NetworkingAnsibleTestCase):
-    def test_bind_port(self, mock_prov_blks, mock_vlan_access_port):
+    def test_bind_port(self, mock_prov_blks, mock_update_access_port):
         self.mech.bind_port(self.mock_port_context)
-        mock_vlan_access_port.assert_called_once()
+        mock_update_access_port.assert_called_once()
 
     @mock.patch('networking_ansible.ml2.mech_driver.'
                 'AnsibleMechanismDriver._is_port_supported')
     def test_bind_port_port_not_supported(self,
-                                          mock_prov_blks,
-                                          mock_vlan_access_port,
-                                          mock_port_supported):
+                                          mock_port_supported,
+                                          mock_update_access_port,
+                                          mock_prov_blks):
         mock_port_supported.return_value = False
         self.mech.bind_port(self.mock_port_context)
-        mock_vlan_access_port.assert_not_called()
+        mock_update_access_port.assert_not_called()
 
     def test_bind_port_no_local_link_info(self,
                                           mock_prov_blks,
-                                          mock_vlan_access_port):
+                                          mock_update_access_port):
         bind_prof = 'binding:profile'
         local_link_info = 'local_link_information'
         del self.mock_port_context.current[bind_prof][local_link_info]
-        self.mech.bind_port(self.mock_port_context)
-        mock_vlan_access_port.assert_not_called()
+        self.assertRaises(netans_ml2exc.LocalLinkInfoMissingException,
+                          self.mech.bind_port,
+                          self.mock_port_context)
+        mock_update_access_port.assert_not_called()
 
 
 class TestIsPortSupported(base.NetworkingAnsibleTestCase):
@@ -106,7 +109,7 @@ class TestIsPortBound(base.NetworkingAnsibleTestCase):
             self.mech._is_port_bound(self.mock_port_context.current))
 
 
-@mock.patch.object(api.NetworkingAnsible, 'create_network')
+@mock.patch.object(api.NetworkingAnsible, 'create_vlan')
 class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_create_network_postcommit(self, mock_create_network):
         self.mech.create_network_postcommit(self.mock_net_context)
@@ -137,7 +140,7 @@ class TestCreateNetworkPostCommit(base.NetworkingAnsibleTestCase):
         mock_create_netwrk.assert_not_called()
 
 
-@mock.patch.object(api.NetworkingAnsible, 'delete_network')
+@mock.patch.object(api.NetworkingAnsible, 'delete_vlan')
 class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_network_postcommit(self, mock_delete_network):
         self.mech.delete_network_postcommit(self.mock_net_context)
@@ -151,7 +154,9 @@ class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
     def test_delete_network_postcommit_fails(self, mock_delete_network):
         mock_delete_network.side_effect = Exception()
-        self.mech.delete_network_postcommit(self.mock_net_context)
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mech.delete_network_postcommit,
+                          self.mock_net_context)
         mock_delete_network.assert_called_once()
 
     def test_delete_network_postcommit_not_vlan(self, mock_delete_network):
@@ -168,23 +173,29 @@ class TestDeleteNetworkPostCommit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
-@mock.patch.object(api.NetworkingAnsible, 'vlan_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'delete_port')
 class TestDeletePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_delete_port_postcommit_current(self,
-                                            mock_vlan_access,
+                                            mock_delete_port,
                                             mock_port_bound):
         self.mech.delete_port_postcommit(self.mock_port_context)
-        mock_vlan_access.assert_called_once_with(
-            'remove',
-            self.mock_port_context.current,
-            self.mock_port_context.network.current)
+        mock_delete_port.assert_called_once_with(self.testhost, self.testport)
+
+    def test_delete_port_postcommit_fails(self,
+                                          mock_delete_port,
+                                          mock_port_bound):
+        mock_delete_port.side_effect = Exception()
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mech.delete_port_postcommit,
+                          self.mock_port_context)
+        mock_delete_port.assert_called_once_with(self.testhost, self.testport)
 
     def test_delete_port_postcommit_not_bound(self,
-                                              mock_vlan_access,
+                                              mock_delete_port,
                                               mock_port_bound):
         mock_port_bound.return_value = False
         self.mech.delete_port_postcommit(self.mock_port_context)
-        mock_vlan_access.assert_not_called()
+        mock_delete_port.assert_not_called()
 
 
 @mock.patch('networking_ansible.config.build_ansible_inventory', autospec=True)
@@ -196,32 +207,43 @@ class TestInit(base.NetworkingAnsibleTestCase):
 
 @mock.patch('networking_ansible.ml2.mech_driver.'
             'AnsibleMechanismDriver._is_port_bound')
-@mock.patch.object(api.NetworkingAnsible, 'vlan_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'delete_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
     def test_update_port_postcommit_current(self,
                                             mock_prov_blks,
-                                            mock_vlan_access,
+                                            mock_delete_port,
                                             mock_port_bound):
         self.mech.update_port_postcommit(self.mock_port_context)
         mock_prov_blks.provisioning_complete.assert_called_once()
 
     def test_update_port_postcommit_original(self,
                                              mock_prov_blks,
-                                             mock_vlan_access,
+                                             mock_delete_port,
                                              mock_port_bound):
         mock_port_bound.side_effect = [False, True]
         self.mech.update_port_postcommit(self.mock_port_context)
-        mock_vlan_access.assert_called_once()
+        mock_delete_port.assert_called_once()
+
+    def test_update_port_postcommit_original_fails(self,
+                                                   mock_prov_blks,
+                                                   mock_delete_port,
+                                                   mock_port_bound):
+        mock_port_bound.side_effect = [False, True]
+        mock_delete_port.side_effect = Exception()
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mech.update_port_postcommit,
+                          self.mock_port_context)
+        mock_delete_port.assert_called_once()
 
     def test_update_port_postcommit_not_bound(self,
                                               mock_prov_blks,
-                                              mock_vlan_access,
+                                              mock_delete_port,
                                               mock_port_bound):
         mock_port_bound.side_effect = [False, False]
         self.mech.update_port_postcommit(self.mock_port_context)
-        mock_vlan_access.assert_not_called()
+        mock_delete_port.assert_not_called()
 
 
 @mock.patch.object(api.NetworkingAnsible, '_run_task')
@@ -304,7 +326,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             mock.call(
                 'create_network',
                 host,
-                int(self.network_spec[provider_net.SEGMENTATION_ID]))
+                vlan_id=int(self.network_spec[provider_net.SEGMENTATION_ID]))
             for host in self.HOSTS if 'manage_vlans=False' not in
             self.CONFIG_CONTENT['ansible:%s' % host]]
         self.assertItemsEqual(
@@ -322,7 +344,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             mock.call(
                 'delete_network',
                 host,
-                int(self.network_spec[provider_net.SEGMENTATION_ID]))
+                vlan_id=int(self.network_spec[provider_net.SEGMENTATION_ID]))
             for host in self.HOSTS if 'manage_vlans=False' not in
             self.CONFIG_CONTENT['ansible:%s' % host]]
         self.assertItemsEqual(
@@ -356,11 +378,12 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
 
             port = self.deserialize(
                 self.fmt, req.get_response(self.api))
+
             m_run_task.called_once_with(
                 'update_port',
                 self.HOSTS[0],
-                self.network_spec[provider_net.SEGMENTATION_ID],
-                self.LOCAL_LINK_INFORMATION[0]['port_id'])
+                self.LOCAL_LINK_INFORMATION[0]['port_id'],
+                self.network_spec[provider_net.SEGMENTATION_ID])
             self.assertNotEqual(
                 portbindings.VIF_TYPE_BINDING_FAILED,
                 port['port'][portbindings.VIF_TYPE])
@@ -379,8 +402,8 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             m_run_task.called_once_with(
                 'delete_port',
                 self.HOSTS[0],
-                self.network_spec[provider_net.SEGMENTATION_ID],
-                self.LOCAL_LINK_INFORMATION[0]['port_id'])
+                self.LOCAL_LINK_INFORMATION[0]['port_id'],
+                self.network_spec[provider_net.SEGMENTATION_ID])
 
     def test_update_port_error(self, m_run_task):
         with self._create_unbound_port() as p:
