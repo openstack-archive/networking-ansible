@@ -6,4 +6,5 @@
     parents:
       - "vlan {{ ml2_segmentation_id }}"
   connection: network_cli
-
+  become: True
+  become_method: 'enable'

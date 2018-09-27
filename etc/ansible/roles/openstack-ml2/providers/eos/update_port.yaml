@@ -6,6 +6,9 @@
       - "show interface {{ ml2_port_name }} | json"
       - "show running-config"
   register: output
+  connection: network_cli
+  become: True
+  become_method: 'enable'
 
 - name: "eos: set port facts"
   set_fact:
@@ -29,6 +32,9 @@
           - "interface {{ ml2_port_name }}"
         running_config: "{{ output.stdout[2] }}"
   when: not switchport.enabled
+  connection: network_cli
+  become: True
+  become_method: 'enable'
 
 - name: "eos: port is configured as switchport"
   block:
@@ -52,3 +58,6 @@
         parents: ["interface {{ ml2_port_name }}"]
       when: interface.interfaceStatus == 'disabled'
   when: switchport.enabled
+  connection: network_cli
+  become: True
+  become_method: 'enable'
