@@ -1,0 +1,14 @@
+---
+- name: "cumulus: port is configured as routed"
+  block:
+    - name: "cumulus: reset interface to defaults"
+      nclu:
+        commands: "del interface {{ ml2_port_name }}"
+        commit: true
+
+    - name: "cumulus: build port configuration"
+      nclu:
+        commands:
+          - "add interface {{ ml2_port_name }} bridge access {{ ml2_segmentation_id }}"
+          - "del interface {{ ml2_port_name }} link down"
+        commit: true

@@ -1,0 +1,5 @@
+---
+- name: "nclu: run create_network using nclu"
+  nclu:
+    commands: "add vlan {{ ml2_segmentation_id }}"
+    commit: true
