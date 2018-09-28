@@ -9,7 +9,13 @@
       meta: reset_connection
 
   connection: network_cli
-  when: ml2_settings_junos_enable_netconf
+  # This will affect us in Ansible 2.5.6+
+  # Ansible bug from this pull
+  # https://github.com/ansible/ansible/pull/41655/files
+  # submitted bug report
+  # https://github.com/ansible/ansible/issues/46275
+  # commenting this conditional so we don't stacktrace
+  # when: ml2_settings_junos_enable_netconf
 
 - name: "junos: set netconf template"
   set_fact:
@@ -19,4 +25,3 @@
   netconf_config:
     xml: "{{ lookup('template', ml2_junos_netconf_template) }}"
   connection: netconf
-
