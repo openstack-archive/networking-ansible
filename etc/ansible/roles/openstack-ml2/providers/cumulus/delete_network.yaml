@@ -1,0 +1,5 @@
+---
+- name: "cumulus: run delete_network using nclu"
+  nclu:
+    commands: 'del vlan {{ ml2_segmentation_id }}'
+    commit: true
