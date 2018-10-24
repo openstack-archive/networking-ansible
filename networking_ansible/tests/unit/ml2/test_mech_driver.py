@@ -238,6 +238,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
             'ansible_pass=password\n',
         ] for host in HOSTS
     }
+    CONFIG_CONTENT['ansible:otherhost'].append('manage_vlans=False')
 
     LOCAL_LINK_INFORMATION = [{
         'switch_info': HOSTS[0],
@@ -304,7 +305,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
                 'create_network',
                 host,
                 int(self.network_spec[provider_net.SEGMENTATION_ID]))
-            for host in self.HOSTS]
+            for host in self.HOSTS if 'manage_vlans=False' not in self.CONFIG_CONTENT['ansible:%s' % host]]
         self.assertItemsEqual(
             expected_calls,
             m_run_task.call_args_list)
@@ -321,7 +322,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
                 'delete_network',
                 host,
                 int(self.network_spec[provider_net.SEGMENTATION_ID]))
-            for host in self.HOSTS]
+            for host in self.HOSTS if 'manage_vlans=False' not in self.CONFIG_CONTENT['ansible:%s' % host]]
         self.assertItemsEqual(
             expected_calls,
             m_run_task.call_args_list)

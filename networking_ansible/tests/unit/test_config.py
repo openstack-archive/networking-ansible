@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import tempfile
 
 from networking_ansible.tests.unit import base
 
@@ -60,3 +61,21 @@ class TestBuildAnsibleInventory(base.BaseTestCase):
 
         self.assertEqual(self.inventory,
                          self.ansconfig.build_ansible_inventory())
+
+    def test_build_ansible_inventory_from_file(self):
+        _, conffile = tempfile.mkstemp()
+        fp = open(conffile, 'w')
+        fp.write("[ansible:h1]\nmanage_vlans=0\n")
+        fp.write("[ansible:h2]\nmanage_vlans=1\n")
+        fp.write("[ansible:h3]\nmanage_vlans=false\n")
+        fp.close()
+
+        self.test_config_files = [conffile]
+        self.setup_config()
+
+        ansible_inventory = self.ansconfig.build_ansible_inventory()
+
+        hosts = ansible_inventory['all']['hosts']
+        self.assertEqual({'manage_vlans': False}, hosts['h1'])
+        self.assertEqual({'manage_vlans': True}, hosts['h2'])
+        self.assertEqual({'manage_vlans': False}, hosts['h3'])
