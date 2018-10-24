@@ -14,6 +14,7 @@
 #    under the License.
 
 from oslo_config import cfg
+from oslo_config.types import Boolean
 from oslo_log import log as logging
 
 CONF = cfg.CONF
@@ -30,6 +31,7 @@ def build_ansible_inventory():
     # TODO(radez): consider take advantage of ansible inventory grouping
 
     driver_tag = 'ansible:'
+    booleans = ['manage_vlans']
     inventory = {}
 
     for conffile in CONF.config_file:
@@ -50,6 +52,9 @@ def build_ansible_inventory():
         for host in hosts:
             dev_id = host.partition(driver_tag)[2]
             dev_cfg = {k: v[0] for k, v in hosts[host].items()}
+            for b in booleans:
+                if b in dev_cfg.keys():
+                    dev_cfg[b] = Boolean()(dev_cfg[b].lower())
             inventory[dev_id] = dev_cfg
 
     LOG.info('Ansible Host List: %s', ', '.join(inventory))
