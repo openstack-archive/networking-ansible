@@ -19,12 +19,22 @@ from networking_ansible.tests.unit import base
 
 
 class MockedConfigParser(mock.Mock):
+
     def __init__(self, conffile, sections):
         super(MockedConfigParser, self).__init__()
+        self.conffile = conffile
         self.sections = sections
 
     def parse(self):
-        self.sections.update({'ansible:testhost': {}})
+        section_data = {'ansible:testhost': {}}
+        if self.conffile == 'foo2':
+            section_data = {
+                'ansible:h1': {'manage_vlans': ['0']},
+                'ansible:h2': {'manage_vlans': ['true']},
+                'ansible:h3': {'manage_vlans': ['false']},
+            }
+
+        self.sections.update(section_data)
 
 
 class TestBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
@@ -46,3 +56,16 @@ class TestBuildAnsibleInventory(base.NetworkingAnsibleTestCase):
     def test_build_ansible_inventory_w_hosts(self):
         self.assertEqual(self.inventory,
                          self.ansconfig.build_ansible_inventory())
+
+    @mock.patch('networking_ansible.config.cfg.ConfigParser',
+                MockedConfigParser)
+    def test_build_ansible_inventory_from_file(self):
+        self.test_config_files = ['foo2']
+        self.setup_config()
+
+        ansible_inventory = self.ansconfig.build_ansible_inventory()
+
+        hosts = ansible_inventory['all']['hosts']
+        self.assertEqual({'manage_vlans': False}, hosts['h1'])
+        self.assertEqual({'manage_vlans': True}, hosts['h2'])
+        self.assertEqual({'manage_vlans': False}, hosts['h3'])
