@@ -1,0 +1,9 @@
+Code-Review+1: Bob Fournier <bfournie@redhat.com>
+Code-Review+2: Dan Radez <dradez@redhat.com>
+Workflow+1: Jakub Libosvar <libosvar@redhat.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Thu, 25 Oct 2018 16:08:06 +0000
+Reviewed-on: https://review.openstack.org/612646
+Project: openstack/networking-ansible
+Branch: refs/heads/stable/rocky
