@@ -32,6 +32,7 @@
             ansible:ovs_test:
               ansible_network_os: openvswitch
               ansible_host: localhost
+              mac: 01:23:45:67:89:AB
         test-config:
           $TEMPEST_CONFIG:
             net_ansible_openvswitch:

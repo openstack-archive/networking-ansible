@@ -42,6 +42,7 @@ managed by networking-ansible.
       ansible_host=10.10.2.250
       ansible_user=ansible
       ansible_pass=password
+      mac=01:23:45:67:89:AB
 
     * myhostname is an arbitrary internal identifier used only in ironic's link_local_information.
     * ansible_network_os is a valid Ansible Networking value to indicate switch type.
@@ -51,6 +52,12 @@ managed by networking-ansible.
     * ansible_host is the IP address or hostname used to connect to the switch.
     * ansible_user username of the credentials used to connect to the switch.
     * ansible_pass password of the credentials used to connect to the switch.
+    * mac is the MAC address of the switch as provided by lldp. This is optional to provide and
+      specific to OpenStack ML2 use cases. It is used for zero touch provisioning using Ironic
+      introspection. Introspection gathers the switch's MAC and node's port provided by lldp
+      and populates the baremetal node's local_link_information. If this parameter is provided in
+      the ML2 ini configuration it will be used to match against the lldp provided MAC to
+      populate internally generated ansible playbooks with the appropriate host name for the switch.
 
     Additional available parameters:
 
