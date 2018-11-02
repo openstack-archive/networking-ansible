@@ -61,17 +61,13 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
         return self.admin_networks_client.show_network(
             network_id)['network']['provider:segmentation_id']
 
-    def create_port(self, network_id):
+    def create_port(self, network_id, linklocalinfo):
         port = self.admin_ports_client.create_port(
             network_id=network_id, name=self.ovs_port_name)['port']
         self.addCleanup(self.cleanup_port, port['id'])
 
         host = self.os_admin.hypervisor_client.list_hypervisors(
             )['hypervisors'][0]['hypervisor_hostname']
-
-        llc = [{'switch_info': self.switch_name,
-                'switch_id': self.ovs_bridge_mac,
-                'port_id': self.ovs_port_name}]
 
         update_args = {
             'device_owner': 'baremetal:none',
@@ -80,7 +76,7 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
             'binding:vnic_type': 'baremetal',
             'binding:host_id': host,
             'binding:profile': {
-                'local_link_information': llc
+                'local_link_information': linklocalinfo
             }
         }
         self.admin_ports_client.update_port(
@@ -91,7 +87,25 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
 
     @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e2')
     def test_update_port(self):
-        port = self.create_port(self.network['id'])
+        linklocalinfo = [{'switch_info': self.switch_name,
+                          'port_id': self.ovs_port_name}]
+        port = self.create_port(self.network['id'], linklocalinfo)
+        current_tag = self.ovs.db_get(
+            'Port', self.ovs_port_name, 'tag').execute()
+        network_segmentation_id = self.get_network_segmentation_id(
+            self.network['id'])
+        self.assertEqual(network_segmentation_id, current_tag)
+
+        self.cleanup_port(port['id'])
+        current_tag = self.ovs.db_get(
+            'Port', self.ovs_port_name, 'tag').execute()
+        self.assertEqual([], current_tag)
+
+    @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e3')
+    def test_update_port_no_info(self):
+        linklocalinfo = [{'switch_id': '01:23:45:67:89:AB',
+                          'port_id': self.ovs_port_name}]
+        port = self.create_port(self.network['id'], linklocalinfo)
         current_tag = self.ovs.db_get(
             'Port', self.ovs_port_name, 'tag').execute()
         network_segmentation_id = self.get_network_segmentation_id(

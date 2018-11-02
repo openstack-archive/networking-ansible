@@ -40,6 +40,12 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         LOG.debug("Initializing Ansible ML2 driver")
 
         inventory = config.build_ansible_inventory()
+        # create a dict of switches that have macs defined
+        # dict uses mac for key and name for value
+        hosts = inventory['all']['hosts']
+        self.mac_map = {
+            host['mac']: name for name, host in hosts.items() if 'mac' in host
+        }
         self.ansnet = api.NetworkingAnsible(inventory)
 
     def create_network_postcommit(self, context):
