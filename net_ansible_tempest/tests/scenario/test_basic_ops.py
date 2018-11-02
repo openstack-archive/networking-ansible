@@ -28,10 +28,15 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
         if not cfg.CONF.service_available.netansible:
             raise cls.skipException("networking ansible is not enabled")
 
+    def __init__(self, *args, **kwargs):
+        super(TestWithOvs, self).__init__(*args, **kwargs)
+        self.port_index = 0
+
     def setUp(self):
         super(TestWithOvs, self).setUp()
         self.ovs = utils.get_idl_singleton()
         self.network = self.create_network()
+        self.port_index = 0
 
     def cleanup_port(self, port_id):
         """Remove Neutron port and skip NotFound exceptions."""
@@ -55,23 +60,23 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
 
     @property
     def ovs_port_name(self):
-        return cfg.CONF.net_ansible_openvswitch.port_name
+        port_name = '{}{}'.format(
+                cfg.CONF.net_ansible_openvswitch.port_prefix,
+                self.port_index)
+        self.port_index +=1
+        return port_name
 
     def get_network_segmentation_id(self, network_id):
         return self.admin_networks_client.show_network(
             network_id)['network']['provider:segmentation_id']
 
-    def create_port(self, network_id):
+    def create_port(self, network_id, linklocalinfo):
         port = self.admin_ports_client.create_port(
             network_id=network_id, name=self.ovs_port_name)['port']
         self.addCleanup(self.cleanup_port, port['id'])
 
         host = self.os_admin.hypervisor_client.list_hypervisors(
             )['hypervisors'][0]['hypervisor_hostname']
-
-        llc = [{'switch_info': self.switch_name,
-                'switch_id': self.ovs_bridge_mac,
-                'port_id': self.ovs_port_name}]
 
         update_args = {
             'device_owner': 'baremetal:none',
@@ -80,7 +85,7 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
             'binding:vnic_type': 'baremetal',
             'binding:host_id': host,
             'binding:profile': {
-                'local_link_information': llc
+                'local_link_information': linklocalinfo
             }
         }
         self.admin_ports_client.update_port(
@@ -89,16 +94,27 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
         )
         return port
 
+    def _test_update_port(self, link_local_info):
+        port = self.create_port(self.network['id'], link_local_info)
+           current_tag = self.ovs.db_get(
+               'Port', self.ovs_port_name, 'tag').execute()
+           network_segmentation_id = self.get_network_segmentation_id(
+               self.network['id'])
+           self.assertEqual(network_segmentation_id, current_tag)
+
+           self.cleanup_port(port['id'])
+           current_tag = self.ovs.db_get(
+               'Port', self.ovs_port_name, 'tag').execute()
+           self.assertEqual([], current_tag)
+
     @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e2')
     def test_update_port(self):
-        port = self.create_port(self.network['id'])
-        current_tag = self.ovs.db_get(
-            'Port', self.ovs_port_name, 'tag').execute()
-        network_segmentation_id = self.get_network_segmentation_id(
-            self.network['id'])
-        self.assertEqual(network_segmentation_id, current_tag)
+        link_local_info = [{'switch_info': self.switch_name,
+                            'port_id': self.ovs_port_name}]
+        self._test_update_port(local_link_info)
 
-        self.cleanup_port(port['id'])
-        current_tag = self.ovs.db_get(
-            'Port', self.ovs_port_name, 'tag').execute()
-        self.assertEqual([], current_tag)
+    @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e3')
+    def test_update_port_no_info(self):
+        linklocalinfo = [{'switch_id': '01:23:45:67:89:AB',
+                          'port_id': self.ovs_port_name}]
+        self._test_update_port(local_link_info)
