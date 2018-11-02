@@ -40,6 +40,12 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         LOG.debug("Initializing Ansible ML2 driver")
 
         inventory = config.build_ansible_inventory()
+        # create a dict of switches that have macs defined
+        # dict uses mac for key and name for value
+        hosts = inventory['all']['hosts']
+        self.mac_map = {
+            h['mac'].upper(): name for name, h in hosts.items() if 'mac' in h
+        }
         self.ansnet = api.NetworkingAnsible(inventory)
 
     def create_network_postcommit(self, context):
@@ -314,8 +320,14 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                   'binding:profile'.format(port_id=port['id'])
             LOG.debug(msg)
             raise exceptions.LocalLinkInfoMissingException(msg)
+        switch_mac = local_link_info[0].get('switch_id')
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
+        # fill in the switch name if mac exists but name is not defined
+        # this provides support for introspection when the switch's mac is
+        # also provided in the ML2 conf for ansible-networking
+        if not switch_name and switch_mac in self.mac_map:
+            switch_name = self.mac_map[switch_mac.upper()]
         segmentation_id = network.get('provider:segmentation_id', '')
         return switch_name, switch_port, segmentation_id
 

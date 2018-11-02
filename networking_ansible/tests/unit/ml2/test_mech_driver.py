@@ -54,7 +54,17 @@ class NetAnsibleML2Base(test_plugin.Ml2PluginV2TestCase):
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestBindPort(base.NetworkingAnsibleTestCase):
-    def test_bind_port(self, mock_prov_blks, mock_update_access_port):
+    def test_bind_port_info_no_mac(self,
+                                   mock_prov_blks,
+                                   mock_update_access_port):
+        self.mech.bind_port(self.mock_port_context)
+        mock_update_access_port.assert_called_once()
+
+    def test_bind_port_mac_no_info_local_link_info(self,
+                                                   mock_prov_blks,
+                                                   mock_update_access_port):
+        bind_prof = 'binding:profile'
+        self.mock_port_context.current[bind_prof] = self.lli_no_info
         self.mech.bind_port(self.mock_port_context)
         mock_update_access_port.assert_called_once()
 

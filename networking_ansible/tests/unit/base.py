@@ -19,7 +19,6 @@ from oslo_config import cfg
 from oslotest import base
 import pbr
 
-from networking_ansible import api
 from networking_ansible import config
 from networking_ansible.ml2 import mech_driver
 
@@ -51,8 +50,17 @@ class BaseTestCase(base.BaseTestCase):
 
         self.ansconfig = config
         self.testhost = 'testhost'
+        self.testmac = '01:23:45:67:89:AB'
         self.empty_inventory = {'all': {'hosts': {}}}
-        self.inventory = {'all': {'hosts': {self.testhost: {}}}}
+        self.inventory = {
+            'all': {
+                'hosts': {
+                    self.testhost: {
+                        'mac': self.testmac
+                    }
+                }
+            }
+        }
 
     def setup_config(self):
         """Create the default configurations."""
@@ -69,8 +77,10 @@ class NetworkingAnsibleTestCase(BaseTestCase):
     def setUp(self):
         patch_neutron_quotas()
         super(NetworkingAnsibleTestCase, self).setUp()
-        self.mech = mech_driver.AnsibleMechanismDriver()
-        self.mech.initialize()
+        with mock.patch('networking_ansible.ml2.mech_driver.config') as m_cfg:
+            m_cfg.build_ansible_inventory.return_value = self.inventory
+            self.mech = mech_driver.AnsibleMechanismDriver()
+            self.mech.initialize()
         self.testsegid = '37'
         self.testport = 'switchportid'
 
@@ -86,14 +96,21 @@ class NetworkingAnsibleTestCase(BaseTestCase):
         # define mocked port context
         self.mock_port_context = mock.create_autospec(
             driver_context.PortContext).return_value
+        self.lli_no_mac = {
+            'local_link_information': [{
+                'switch_info': self.testhost,
+                'port_id': self.testport,
+            }]
+        }
+        self.lli_no_info = {
+            'local_link_information': [{
+                'switch_id': self.testmac,
+                'port_id': self.testport,
+            }]
+        }
         self.mock_port_context.current = {
             'id': 'aaaa-bbbb-cccc',
-            'binding:profile': {
-                'local_link_information': [{
-                    'switch_info': self.testhost,
-                    'port_id': self.testport,
-                }]
-            },
+            'binding:profile': self.lli_no_mac,
             'binding:vnic_type': 'baremetal',
             'binding:vif_type': 'other',
         }
@@ -107,5 +124,3 @@ class NetworkingAnsibleTestCase(BaseTestCase):
         self.mock_port_context.segments_to_bind = [
             self.mock_port_context.network.current
         ]
-
-        self.mech.ansnet = api.NetworkingAnsible(self.inventory)
