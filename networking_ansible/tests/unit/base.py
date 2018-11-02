@@ -36,6 +36,7 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
         self.ansconfig = config
         self.testmac = '01:23:45:67:89:AB'
         self.testhost = 'testhost'
+        self.empty_inventory = {'all': {'hosts': {}}}
         self.inventory = {
             'all': {
                 'hosts': {
