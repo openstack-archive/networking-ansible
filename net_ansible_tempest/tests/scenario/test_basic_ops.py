@@ -106,6 +106,6 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
 
     @decorators.idempotent_id('40b81fe4-1e9c-4f10-a808-c23f85aea5e3')
     def test_update_port_no_info(self):
-        local_link_info = [{'switch_id': '01:23:45:67:89:AB',
+        local_link_info = [{'switch_id': '01:23:45:67:89:ab',
                             'port_id': self.ovs_port_name}]
         self._test_update_port(local_link_info)

@@ -34,7 +34,7 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
             mock.patch(func).start()
         super(NetworkingAnsibleTestCase, self).setUp()
         self.ansconfig = config
-        self.testmac = '01:23:45:67:89:AB'
+        self.testmac = '01:23:45:67:89:ab'
         self.testhost = 'testhost'
         self.inventory = {
             'all': {

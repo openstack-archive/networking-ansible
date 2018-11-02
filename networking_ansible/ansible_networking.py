@@ -125,14 +125,14 @@ class AnsibleNetworking(object):
         local_link_info = port['binding:profile'].get('local_link_information')
         if not local_link_info:
             return
-        switch_mac = local_link_info[0].get('switch_id')
+        switch_mac = local_link_info[0].get('switch_id', '').upper()
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
         # fill in the switch name if mac exists but name is not defined
         # this provides support for introspection when the switch's mac is
         # also provided in the ML2 conf for ansible-networking
         if not switch_name and switch_mac in self.mac_map:
-            switch_name = self.mac_map[switch_mac.upper()]
+            switch_name = self.mac_map[switch_mac]
         try:
             LOG.debug(debug_msg[assign_remove].format(
                 switch_port=switch_port,
