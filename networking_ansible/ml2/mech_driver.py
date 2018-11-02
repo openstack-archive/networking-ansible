@@ -214,8 +214,14 @@ class AnsibleMechanismDriver(api.MechanismDriver):
             # TODO(radez) log debug messages here
             return
 
+        switch_mac = local_link_info[0].get('switch_id')
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
+        # fill in the switch name if mac exists but name is not defined
+        # this provides support for introspection when the switch's mac is
+        # also provided in the ML2 conf for ansible-networking
+        if not switch_name and switch_mac in self.ansnet.mac_map:
+            switch_name = self.ansnet.mac_map[switch_mac.upper()]
 
         network = context.network.current
         # If segmentation ID is None, vlan will be set to 1
