@@ -36,6 +36,8 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
         self.ansconfig = config
         self.testmac = '01:23:45:67:89:AB'
         self.testhost = 'testhost'
+        self.testmac = '01:23:45:67:89:AB'
+        self.empty_inventory = {'all': {'hosts': {}}}
         self.inventory = {
             'all': {
                 'hosts': {
@@ -45,7 +47,6 @@ class NetworkingAnsibleTestCase(test_plugin.Ml2PluginV2TestCase):
                 }
             }
         }
-
         with mock.patch('networking_ansible.ml2.mech_driver.config') as m_cfg:
             m_cfg.build_ansible_inventory.return_value = self.inventory
             self.mech = mech_driver.AnsibleMechanismDriver()
