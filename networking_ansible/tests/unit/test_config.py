@@ -26,7 +26,7 @@ class MockedConfigParser(mock.Mock):
         self.sections = sections
 
     def parse(self):
-        section_data = {'ansible:testhost': {}}
+        section_data = {'ansible:testhost': {'mac': ['01:23:45:67:89:AB']}}
         if self.conffile == 'foo2':
             section_data = {
                 'ansible:h1': {'manage_vlans': ['0']},

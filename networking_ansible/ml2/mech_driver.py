@@ -40,6 +40,11 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         LOG.debug("Initializing Ansible ML2 driver")
 
         inventory = config.build_ansible_inventory()
+        # create a dict of switches that have macs defined
+        # dict uses mac for key and name for value
+        hosts = inventory['all']['hosts']
+        self.mac_map = dict([(hosts[y]['mac'], y)
+                            for y in hosts if 'mac' in hosts[y]])
         self.ansnet = api.NetworkingAnsible(inventory)
 
     def create_network_postcommit(self, context):
@@ -141,7 +146,8 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         """
         # Validate current locallink info
         # Raises a LocalLink error if invalid
-        AnsibleMechanismDriver._link_info_from_port(context.current)
+        AnsibleMechanismDriver._link_info_from_port(context.current,
+                                                    self.mac_map)
 
         if self._is_port_bound(context.current):
             port = context.current
@@ -153,6 +159,7 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
             network = context.network.current
             switch_name, switch_port, segmentation_id = \
                 AnsibleMechanismDriver._link_info_from_port(context.original,
+                                                            self.mac_map,
                                                             network)
 
             LOG.debug('Unplugging port {switch_port} on '
@@ -195,7 +202,9 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         network = context.network.current
         if self._is_port_bound(context.current):
             switch_name, switch_port, segmentation_id = \
-                AnsibleMechanismDriver._link_info_from_port(port, network)
+                AnsibleMechanismDriver._link_info_from_port(port,
+                                                            self.mac_map,
+                                                            network)
             LOG.debug('Unplugging port {switch_port} on '
                       '{switch_name} from vlan: {segmentation_id}'.format(
                           switch_port=switch_port,
@@ -261,7 +270,9 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         port = context.current
         network = context.network.current
         switch_name, switch_port, segmentation_id = \
-            AnsibleMechanismDriver._link_info_from_port(port, network)
+            AnsibleMechanismDriver._link_info_from_port(port,
+                                                        self.mac_map,
+                                                        network)
         if not self._is_port_supported(port):
             LOG.debug('Port {} has vnic_type set to %s which is not correct '
                       'to work with networking-ansible driver.'.format(
@@ -330,7 +341,7 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         return vif_type == portbindings.VIF_TYPE_OTHER
 
     @staticmethod
-    def _link_info_from_port(port, network={}):
+    def _link_info_from_port(port, mac_map, network={}):
         # Validate port and local link info
         local_link_info = port['binding:profile'].get('local_link_information')
         if not local_link_info:
@@ -338,7 +349,13 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                   'binding:profile'.format(port_id=port['id'])
             LOG.debug(msg)
             raise exceptions.LocalLinkInfoMissingException(msg)
+        switch_mac = local_link_info[0].get('switch_id')
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
+        # fill in the switch name if mac exists but name is not defined
+        # this provides support for introspection when the switch's mac is
+        # also provided in the ML2 conf for ansible-networking
+        if not switch_name and switch_mac in mac_map:
+            switch_name = mac_map[switch_mac]
         segmentation_id = network.get('provider:segmentation_id', '')
         return switch_name, switch_port, segmentation_id
