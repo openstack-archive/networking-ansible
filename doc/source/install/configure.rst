@@ -42,7 +42,6 @@ managed by networking-ansible.
       ansible_host=10.10.2.250
       ansible_user=ansible
       ansible_pass=password
-      mac=01:23:45:67:89:AB
 
     * myhostname is an arbitrary internal identifier used only in ironic's link_local_information.
     * ansible_network_os is a valid Ansible Networking value to indicate switch type.
@@ -52,25 +51,40 @@ managed by networking-ansible.
     * ansible_host is the IP address or hostname used to connect to the switch.
     * ansible_user username of the credentials used to connect to the switch.
     * ansible_pass password of the credentials used to connect to the switch.
+
+    OpenStack Specific parameters:
+
+    .. code-block:: ini
+
+      mac=01:23:45:67:89:AB
+      manage_vlans=True
+
     * mac is the MAC address of the switch as provided by lldp. This is optional to provide and
       specific to OpenStack ML2 use cases. It is used for zero touch provisioning using Ironic
       introspection. Introspection gathers the switch's MAC and node's port provided by lldp
       and populates the baremetal node's local_link_information. If this parameter is provided in
       the ML2 ini configuration it will be used to match against the lldp provided MAC to
       populate internally generated ansible playbooks with the appropriate host name for the switch.
+    * manage_vlans is optional and defaults to True. Set this to False for a
+      switch if networking-ansible should not create and delete VLANs on the device.
 
-    Additional available parameters:
+    Additional parameters and examples:
 
     .. code-block:: ini
 
       ansible_ssh_private_key_file=/path/to/ansible-ssh
-      manage_vlans=True
+      ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q user@hostname"'
 
     * ansible_ssh_private_key_file can be used as an alternative to ansible_pass
       to use ssh key authentication instead of password authentication.
-    * manage_vlans is optional and defaults to True. Set this to False for a
-      switch if networking-ansible should not create and delete VLANs on the device.
+    * ansible_ssh_common_args is passed to the ssh command Ansible uses.
+      In the example above the ProxyCommand is used to connect to a switch through a proxy.
 
+    Parameters pass through automatically:
+
+    * All parameters not mentioned here are passed from neutron to ansible through inventory.
+      Any inventory parameter that is supported by the version of Ansible should be able to
+      be defined in the switch's configuration stanza and will passed to Ansible.
 
 #. Restart the Neutron API service
 
