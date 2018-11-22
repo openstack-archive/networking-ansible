@@ -25,3 +25,7 @@
   netconf_config:
     xml: "{{ lookup('template', ml2_junos_netconf_template) }}"
   connection: netconf
+  register: result
+  retries: 5
+  delay: 1
+  until: result.msg is not defined or result.msg.find('configuration database locked by:') == -1
