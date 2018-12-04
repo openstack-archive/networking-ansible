@@ -10,7 +10,7 @@
 
     - name: output the status
       debug:
-        msg: "Anisble.cfg exists"
+        msg: "Ansible.cfg exists"
       when: ansible_file.stat.exists
 
     - name: set log path for ansible.cfg
