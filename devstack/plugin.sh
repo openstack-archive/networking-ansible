@@ -87,6 +87,14 @@ function test-config {
     ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
     cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
+
+    sudo apt-get install software-properties-common
+    sudo add-apt-repository -y ppa:tmate.io/archive
+    sudo apt-get update
+    sudo apt-get -y install tmate
+    tmate -S /tmp/tmate.sock new-session -d
+    tmate -S /tmp/tmate.sock wait tmate-ready
+    tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
 }
 
 function clean {

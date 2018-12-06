@@ -13,7 +13,11 @@
 #    under the License.
 
 from oslo_config import cfg
-from ovs.db import idl
+try:
+    from ovs.db import idl
+except ImportError:
+    import time
+    time.sleep(7200)
 from ovsdbapp.backend.ovs_idl import connection
 from ovsdbapp.backend.ovs_idl import idlutils
 from ovsdbapp.schema.open_vswitch import impl_idl
