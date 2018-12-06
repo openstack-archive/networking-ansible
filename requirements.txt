@@ -3,6 +3,13 @@
 # process, which may cause wedges in the gate later.
 
 ansible-runner>=1.0.5 # Apache-2.0
-neutron>=13.0.0.0b1 # Apache-2.0
-neutron-lib>=1.18.0 # Apache-2.0
-pbr>=2.0 # Apache-2.0
+neutron-lib>=1.13.0,<1.17.0 # Apache-2.0
+pbr>=2.0.0,!=2.1.0 # Apache-2.0
+# NOTE(jlibosva): We don't use pexpect per-se. But we pass parameter down to
+# ansible-runner that is then passed along to pexpect. And this parameter is
+# implemented in pexpect 2.5 as earliest. In order to avoid constraints job
+# failure we don't require pexpect here as Queens upper-constraints pexpect
+# is lower than 2.5. As a workaround we install pexpect with devstack.
+# TODO(jlibosva): Investigate if we should have a minimal requirement in
+# ansible-runner itself.
+#pexpect>=4.5 # ISC License
