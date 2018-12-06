@@ -18,7 +18,7 @@
     roles:
       - zuul: openstack-dev/devstack
     vars:
-      tox_envlist: all
+      tox_envlist: all-plugin
       devstack_localrc:
         TEMPEST_PLUGINS: /opt/stack/networking-ansible
         Q_PLUGIN: ml2
