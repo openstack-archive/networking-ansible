@@ -225,7 +225,7 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                               exc=e))
                 raise ml2_exc.MechanismDriverError(e)
 
-    def bind_port(self, context):
+    def bind_port(self, context, delete_first=False):
         """Attempt to bind a port.
 
         :param context: PortContext instance describing the port
@@ -291,6 +291,14 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
 
         # Assign port to network
         try:
+            if delete_first:
+                LOG.error('Failed to plug in port {neutron_port} on '
+                          'device: {switch_name} from network {net_id} '
+                          'Trying delete port'.format(
+                              neutron_port=port['id'],
+                              net_id=network['id'],
+                              switch_name=switch_name))
+                self.ansnet.delete_port(switch_name, switch_port)
             self.ansnet.update_access_port(switch_name,
                                            switch_port,
                                            segmentation_id)
@@ -302,14 +310,19 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                          net_id=network['id'],
                          switch_name=switch_name))
         except Exception as e:
-            LOG.error('Failed to plug in port {neutron_port} on '
-                      'device: {switch_name} from network {net_id} '
-                      'reason: {exc}'.format(
-                          neutron_port=port['id'],
-                          net_id=network['id'],
-                          switch_name=switch_name,
-                          exc=e))
-            raise ml2_exc.MechanismDriverError(e)
+            if delete_first:
+                # If we've already tried the delete then just fail
+                LOG.error('Failed to plug in port {neutron_port} on '
+                          'device: {switch_name} from network {net_id} '
+                          'reason: {exc}'.format(
+                              neutron_port=port['id'],
+                              net_id=network['id'],
+                              switch_name=switch_name,
+                              exc=e))
+                raise ml2_exc.MechanismDriverError(e)
+            else:
+                # If the bind fails try deleting the port and rebinding
+                self.bind_port(context, delete_first=True)
 
     def _link_info_from_port(self, port, network=None):
         network = network or {}
