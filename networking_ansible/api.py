@@ -70,10 +70,10 @@ class NetworkingAnsible(object):
         return result
 
     def create_vlan(self, hostname, vlan_id):
-        return self._run_task('create_network', hostname, vlan_id=vlan_id)
+        return self._run_task('create_vlan', hostname, vlan_id=vlan_id)
 
     def delete_vlan(self, hostname, vlan_id):
-        return self._run_task('delete_network', hostname, vlan_id=vlan_id)
+        return self._run_task('delete_vlan', hostname, vlan_id=vlan_id)
 
     def update_access_port(self, hostname, port, vlan_id):
         """Configure access port on a vlan or shutdown the port.
@@ -88,7 +88,7 @@ class NetworkingAnsible(object):
                        An empty is will get translated in Ansible to the
                        target device's default VLAN assignment.
         """
-        return self._run_task('update_port', hostname, port, vlan_id)
+        return self._run_task('update_access_port', hostname, port, vlan_id)
 
     def delete_port(self, hostname, port):
         return self._run_task('delete_port', hostname, port)
