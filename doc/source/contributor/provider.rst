@@ -27,15 +27,15 @@ networking-ansible.
   to assign switchports to. Open vSwitch expects no VLAN ID and VLAN name
   in the case that port is not assigned to a specific VLAN.
 
-* create_network.yaml
+* create_vlan.yaml
 
   Defines the Ansible tasks to create a VLAN on a switch.
 
-* delete_network.yaml
+* delete_vlan.yaml
 
   Defines the Ansible tasks to delete a VLAN on a switch.
 
-* update_port.yaml
+* update_access_port.yaml
 
   Defines the Ansible tasks to assign a VLAN to a switchport in access mode.
 

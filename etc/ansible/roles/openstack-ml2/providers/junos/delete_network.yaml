@@ -1,4 +1,0 @@
----
-- name: "junos: run delete_network using netconf"
-  include_tasks: netconf.yaml
-

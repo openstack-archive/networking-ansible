@@ -23,17 +23,17 @@ class TestCreateDeleteNetwork(base.NetworkingAnsibleTestCase):
 
     @mock.patch('networking_ansible.api'
                 '.NetworkingAnsible._run_task')
-    def test_create_network(self, mock_run_task):
+    def test_create_vlan(self, mock_run_task):
         self.mech.ansnet.create_vlan(self.testhost, self.testsegid)
-        mock_run_task.assert_called_once_with('create_network',
+        mock_run_task.assert_called_once_with('create_vlan',
                                               self.testhost,
                                               vlan_id=self.testsegid)
 
     @mock.patch('networking_ansible.api'
                 '.NetworkingAnsible._run_task')
-    def test_delete_network(self, mock_run_task):
+    def test_delete_vlan(self, mock_run_task):
         self.mech.ansnet.delete_vlan(self.testhost, self.testsegid)
-        mock_run_task.assert_called_once_with('delete_network',
+        mock_run_task.assert_called_once_with('delete_vlan',
                                               self.testhost,
                                               vlan_id=self.testsegid)
 
@@ -104,14 +104,14 @@ class TestVlanAccessPort(base.NetworkingAnsibleTestCase):
         self.mech.ansnet.update_access_port(self.testhost,
                                             self.testport,
                                             self.testsegid)
-        mock_run_task.assert_called_once_with('update_port',
+        mock_run_task.assert_called_once_with('update_access_port',
                                               self.testhost,
                                               self.testport,
                                               self.testsegid)
 
     def test_remove_vlan_access_port(self, mock_run_task):
         self.mech.ansnet.delete_port(self.testhost, self.testport)
-        mock_run_task.assert_called_once_with('delete_port',
+        mock_run_task.assert_called_once_with('delete_access_port',
                                               self.testhost,
                                               self.testport)
 

@@ -2,4 +2,4 @@
 - name: include and run device provider specific tasks
   include_tasks: run.yaml
   vars:
-    ml2_resource: delete_network
+    network_action: create_vlan

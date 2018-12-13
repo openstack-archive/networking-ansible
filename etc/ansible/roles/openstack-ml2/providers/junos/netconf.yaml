@@ -19,7 +19,7 @@
 
 - name: "junos: set netconf template"
   set_fact:
-    ml2_junos_netconf_template: "templates/junos/{{ ml2_resource }}.xml.j2"
+    ml2_junos_netconf_template: "templates/junos/{{ network_action }}.xml.j2"
 
 - name: "junos: send configuration to device"
   netconf_config:

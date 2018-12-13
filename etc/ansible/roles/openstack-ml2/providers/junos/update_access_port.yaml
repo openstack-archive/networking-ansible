@@ -1,0 +1,3 @@
+---
+- name: "junos: run update access port using netconf"
+  include_tasks: netconf.yaml

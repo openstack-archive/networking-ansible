@@ -334,7 +334,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
         self.assertEqual(webob.exc.HTTPCreated.code, res.status_int)
         expected_calls = [
             mock.call(
-                'create_network',
+                'create_vlan',
                 host,
                 vlan_id=int(self.network_spec[provider_net.SEGMENTATION_ID]))
             for host in self.HOSTS if 'manage_vlans=False' not in
@@ -352,7 +352,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
         self.assertEqual(webob.exc.HTTPNoContent.code, res.status_int)
         expected_calls = [
             mock.call(
-                'delete_network',
+                'delete_vlan',
                 host,
                 vlan_id=int(self.network_spec[provider_net.SEGMENTATION_ID]))
             for host in self.HOSTS if 'manage_vlans=False' not in
@@ -390,7 +390,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
                 self.fmt, req.get_response(self.api))
 
             m_run_task.called_once_with(
-                'update_port',
+                'update_access_port',
                 self.HOSTS[0],
                 self.LOCAL_LINK_INFORMATION[0]['port_id'],
                 self.network_spec[provider_net.SEGMENTATION_ID])

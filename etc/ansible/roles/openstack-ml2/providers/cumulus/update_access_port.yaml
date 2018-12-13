@@ -1,5 +1,5 @@
 ---
-- name: "cumulus: port is configured as routed"
+- name: "cumulus: configure access port using nclu"
   block:
     - name: "cumulus: reset interface to defaults"
       nclu:
