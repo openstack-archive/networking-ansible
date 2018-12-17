@@ -28,20 +28,22 @@ class NetworkingAnsible(object):
     def __init__(self, inventory):
         self.inventory = inventory
 
-    def _run_task(self, task, hostname, port=None, vlan_id=None):
+    def _run_task(self, task, hostname,
+                  port=None, vlan_id=None, vlan_name=None):
         """Run a task.
 
         :param task: name of task in openstack-ml2 ansible role
-        :param host_name: name of a host defined in ml2 conf ini files
-        :param vlan_id: vlan id of the network
-        :param switch_port: port name on the switch (optional)
+        :param hostname: name of a host defined in ml2 conf ini files
+        :param port: switchport name on the switch (optional)
+        :param vlan_id: VLAN ID of the network
+        :param vlan_name: VLAN's name/description
 
         See etc/ansible/roles/openstack-ml2/README.md for an exmaple playbook
         """
 
         # build out the ansible playbook
         playbook = [{
-            'name': 'Openstack networking-ansible playbook',
+            'name': 'Openstack Networking-Ansible: '.format(task.capitalize()),
             'hosts': hostname,
             'gather_facts': 'no',  # no need to gather facts every run
             'tasks': [{
@@ -55,6 +57,8 @@ class NetworkingAnsible(object):
                 }
             }]
         }]
+        if vlan_name:
+            playbook[0]['tasks'][0]['vars']['vlan_name'] = vlan_name
         if port:
             playbook[0]['tasks'][0]['vars']['port'] = port
             playbook[0]['tasks'][0]['vars']['port_description'] = port
@@ -69,26 +73,39 @@ class NetworkingAnsible(object):
             raise exceptions.AnsibleRunnerException(' '.join(result.stdout))
         return result
 
-    def create_vlan(self, hostname, vlan_id):
+    def create_vlan(self, hostname, vlan_id, vlan_name=None):
+        """Create VLAN.
+
+        :param hostname: The name of the host in Ansible inventory.
+        :param vlan_id: The VLAN's ID to create.
+        :param vlan_name: The VLAN's name/description.
+        """
         return self._run_task('create_vlan', hostname, vlan_id=vlan_id)
 
     def delete_vlan(self, hostname, vlan_id):
+        """Delete VLAN.
+
+        :param hostname: The name of the host in Ansible inventory.
+        :param vlan_id: The VLAN's ID to delete.
+        """
         return self._run_task('delete_vlan', hostname, vlan_id=vlan_id)
 
     def update_access_port(self, hostname, port, vlan_id):
-        """Configure access port on a vlan or shutdown the port.
-
-        If the configuration required to unplug the port is not present
-        (e.g. local link information), the port will not be unplugged and no
-        exception will be raised.
+        """Configure access port on a vlan.
 
         :param hostname: The name of the host in Ansible inventory.
         :param port: The port to configure.
-        :param lan_id: The vlan_id to assign to the port.
-                       An empty is will get translated in Ansible to the
-                       target device's default VLAN assignment.
+        :param vlan_id: The vlan_id to assign to the port.
+                       An empty or None value will default to the
+                       target device's default VLAN assignment. This
+                       default is assigned in the ansible role
         """
         return self._run_task('update_access_port', hostname, port, vlan_id)
 
     def delete_port(self, hostname, port):
+        """Delete port configuration.
+
+        :param hostname: The name of the host in Ansible inventory.
+        :param port: The port to configure.
+        """
         return self._run_task('delete_port', hostname, port)

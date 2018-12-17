@@ -45,7 +45,8 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
         mock_result.stats = {'failures': []}
 
         self.mech.ansnet._run_task('fake_task',
-                                   self.testhost)
+                                   self.testhost,
+                                   vlan_name='test_vlan')
         # Assert switch_port is not set
         self.assertNotIn('port',
                          mock_ans_runner.run.call_args[1]['playbook'][0]
