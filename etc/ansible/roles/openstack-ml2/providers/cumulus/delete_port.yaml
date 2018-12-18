@@ -1,7 +1,7 @@
 ---
 - name: "cumulus: get interfaces"
   nclu:
-    commands: "show interface {{ ml2_port_name }} json"
+    commands: "show interface {{ port }} json"
   register: output
 
 - name: "cumulus: set port facts"
@@ -10,15 +10,15 @@
 
 - name: "cumulus: verify port exists"
   fail:
-    msg: "port {{ ml2_port_name }} does not exist on this device"
+    msg: "port {{ port }} does not exist on this device"
   when: interface.mode == 'NotConfigured'
 
 - name: "cumulus: remove port configuration"
   nclu:
-    commands: "del interface {{ ml2_port_name }}"
+    commands: "del interface {{ port }}"
     commit: true
 
 - name: "cumulus: administratively disable the port"
   nclu:
-    commands: "add interface {{ ml2_port_name }} link down"
+    commands: "add interface {{ port }} link down"
     commit: true

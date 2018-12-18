@@ -2,15 +2,15 @@
     <configuration>
         <interfaces>
             <interface>
-                <name>{{ ml2_port_name }}</name>
+                <name>{{ vlan_name }}</name>
                 <unit>
                     <name>0</name>
-                    <description>{{ ml2_port_description }}</description>
+                    <description>{{ port_description }}</description>
                     <family>
                         <ethernet-switching>
                             <interface-mode>access</interface-mode>
                             <vlan>
-                                <members>{{ ml2_segmentation_id }}</members>
+                                <members>{{ vlan_id }}</members>
                             </vlan>
                         </ethernet-switching>
                     </family>
