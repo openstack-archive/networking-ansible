@@ -8,9 +8,8 @@ Requirements
 
 Role Variables
 --------------
-
-* ml2_segmenation_id
-* ml2_segmentation_name (default depends on provider)
+* vlan_id
+* vlan_name (default depends on provider)
 
 Dependencies
 ------------
@@ -32,16 +31,16 @@ Example Playbook
         name: openstack-ml2
         tasks_from: create_vlan
       vars:
-        segmentation_name: v101
-        segmentation_id: 101
+        vlan_name: v101
+        vlan_id: 101
 
     - name: do create_vlan
       import_role:
         name: openstack-ml2
         tasks_from: delete_vlan
       vars:
-        segmentation_id: 101
-        segmentation_name: v101
+        vlan_id: 101
+        vlan_name: v101
 ```
 
 

@@ -22,7 +22,7 @@ networking-ansible.
 
 * defaults.yaml
 
-  Defines default values for segmentation name and ID. For example some
+  Defines default values for VLAN name and ID. For example some
   switch vendors use the name "default" and VLAN ID 1 as a default VLAN
   to assign switchports to. Open vSwitch expects no VLAN ID and VLAN name
   in the case that port is not assigned to a specific VLAN.

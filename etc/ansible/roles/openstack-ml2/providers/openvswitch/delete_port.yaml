@@ -2,7 +2,7 @@
 - name: "openvswitch: run delete_port"
   openvswitch_db:
     table: Port
-    record: "{{ ml2_port_name }}"
+    record: "{{ port }}"
     col: tag
     value: "[]"
   become: yes
