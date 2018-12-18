@@ -9,12 +9,12 @@
 
 - name: "eos: verify port exists"
   fail:
-    msg: "port {{ ml2_port_name }} does not exist on this device"
-  when: ml2_port_name not in output.stdout[0].interfaces | list
+    msg: "port {{ port }} does not exist on this device"
+  when: port not in output.stdout[0].interfaces | list
 
 - name: "eos: remove port configuration"
   eos_config:
-    lines: "default interface {{ ml2_port_name }}"
+    lines: "default interface {{ port }}"
   connection: network_cli
   become: True
   become_method: 'enable'
@@ -22,7 +22,7 @@
 - name: "eos: administratively disable the port"
   eos_config:
     lines: "shutdown"
-    parents: ["interface {{ ml2_port_name }}"]
+    parents: ["interface {{ port }}"]
   connection: network_cli
   become: True
   become_method: 'enable'

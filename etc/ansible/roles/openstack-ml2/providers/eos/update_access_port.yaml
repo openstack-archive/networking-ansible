@@ -2,8 +2,8 @@
 - name: "eos: get current status of the port"
   eos_command:
     commands:
-      - "show interface {{ ml2_port_name }} switchport | json"
-      - "show interface {{ ml2_port_name }} | json"
+      - "show interface {{ port }} switchport | json"
+      - "show interface {{ port }} | json"
       - "show running-config"
   register: output
   connection: network_cli
@@ -12,24 +12,24 @@
 
 - name: "eos: set port facts"
   set_fact:
-    switchport: "{{ output.stdout[0].switchports[ml2_port_name] }}"
-    interface: "{{ output.stdout[1].interfaces[ml2_port_name] }}"
+    switchport: "{{ output.stdout[0].switchports[port] }}"
+    interface: "{{ output.stdout[1].interfaces[port] }}"
 
 - name: "eos: port is configured as routed"
   block:
     - name: "eos: reset interface to defaults"
       eos_config:
-        lines: "default interface {{ ml2_port_name }}"
+        lines: "default interface {{ port }}"
 
     - name: "eos: build port configuration"
       eos_config:
         lines:
-          - "interface {{ ml2_port_name }}"
-          - "description {{ ml2_port_description }}"
-          - "switchport access vlan {{ ml2_segmentation_id }}"
+          - "interface {{ port }}"
+          - "description {{ port_description }}"
+          - "switchport access vlan {{ _vlan_id }}"
           - "no shutdown"
         parents:
-          - "interface {{ ml2_port_name }}"
+          - "interface {{ port }}"
         running_config: "{{ output.stdout[2] }}"
   when: not switchport.enabled
   connection: network_cli
@@ -41,21 +41,21 @@
     - name: "eos: set the switchport mode to access"
       eos_config:
         lines: "switchport mode access"
-        parents: ["interface {{ ml2_port_name }}"]
+        parents: ["interface {{ port }}"]
       when: switchport.switchportInfo.mode != 'access'
 
     - name: "eos: configure port settings"
       eos_config:
         lines:
-          - "description {{ ml2_port_description }}"
-          - "switchport access vlan {{ ml2_segmentation_id }}"
-        parents: ["interface {{ ml2_port_name }}"]
+          - "description {{ port_description }}"
+          - "switchport access vlan {{ _vlan_id }}"
+        parents: ["interface {{ port }}"]
         running_config: "{{ output.stdout[2] }}"
 
     - name: "eos: administratively enable the port"
       eos_config:
         lines: "no shutdown"
-        parents: ["interface {{ ml2_port_name }}"]
+        parents: ["interface {{ port }}"]
       when: interface.interfaceStatus == 'disabled'
   when: switchport.enabled
   connection: network_cli

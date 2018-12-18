@@ -3,12 +3,12 @@
   block:
     - name: "cumulus: reset interface to defaults"
       nclu:
-        commands: "del interface {{ ml2_port_name }}"
+        commands: "del interface {{ port }}"
         commit: true
 
     - name: "cumulus: build port configuration"
       nclu:
         commands:
-          - "add interface {{ ml2_port_name }} bridge access {{ ml2_segmentation_id }}"
-          - "del interface {{ ml2_port_name }} link down"
+          - "add interface {{ port }} bridge access {{ _vlan_id }}"
+          - "del interface {{ port }} link down"
         commit: true

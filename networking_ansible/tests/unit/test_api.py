@@ -47,7 +47,7 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
         self.mech.ansnet._run_task('fake_task',
                                    self.testhost)
         # Assert switch_port is not set
-        self.assertNotIn('port_name',
+        self.assertNotIn('port',
                          mock_ans_runner.run.call_args[1]['playbook'][0]
                                                       ['tasks'][0]['vars']
                          )
@@ -69,7 +69,7 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
         self.assertEqual(
             self.testport,
             mock_ans_runner.run.call_args[1]['playbook'][0]['tasks']
-                                         [0]['vars']['port_name'])
+                                         [0]['vars']['port'])
         # Assert switch_port is set
         self.assertEqual(
             self.testport,

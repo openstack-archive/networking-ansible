@@ -1,6 +1,6 @@
 ---
 - name: "nxos: run delete vlan using network_cli"
   nxos_config:
-    lines: "no vlan {{ ml2_segmentation_id }}"
+    lines: "no vlan {{ _vlan_id }}"
   connection: network_cli
 

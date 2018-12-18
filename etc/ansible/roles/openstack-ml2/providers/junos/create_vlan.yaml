@@ -3,6 +3,6 @@
   junos_command:
     commands:
       - config
-      - "set vlans {{ ml2_segmentation_name }} vlan-id {{ ml2_segmentation_id }}"
+      - "set vlans {{ _vlan_name }} vlan-id {{ _vlan_id }}"
       - commit
   connection: network_cli

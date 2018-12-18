@@ -3,6 +3,6 @@
   junos_command:
     commands:
       - config
-      - "delete vlans {{ ml2_segmentation_name }}"
+      - "delete vlans {{ _vlan_name }}"
       - commit
   connection: network_cli

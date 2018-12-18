@@ -1,9 +1,9 @@
 ---
 # delegate task to localhost to avoid starting the device connection
-- name: "check for required fact: port_name"
+- name: "check for required fact: port"
   fail:
-    msg: "missing required fact: port_name"
-  when: not ml2_port_name
+    msg: "missing required fact: port"
+  when: not port
   delegate_to: localhost
 
 - name: include and run device provider specific tasks
