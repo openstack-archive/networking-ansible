@@ -2,8 +2,8 @@
 - name: "nxos: get current status of the port"
   nxos_command:
     commands:
-      - "show interface {{ ml2_port_name }} switchport | json"
-      - "show interface {{ ml2_port_name }} | json"
+      - "show interface {{ port }} switchport | json"
+      - "show interface {{ port }} | json"
       - "show running-config"
   register: output
 
@@ -16,16 +16,16 @@
   block:
     - name: "nxos: reset interface to defaults"
       nxos_config:
-        lines: "default interface {{ ml2_port_name }}"
+        lines: "default interface {{ port }}"
 
     - name: "nxos: build port configuration"
       nxos_config:
         lines:
-          - "description {{ ml2_port_description }}"
+          - "description {{ port_description }}"
           - "switchport"
-          - "switchport access vlan {{ ml2_segmentation_id }}"
+          - "switchport access vlan {{ vlan_id }}"
           - "no shutdown"
-        parents: ["interface {{ ml2_port_name }}"]
+        parents: ["interface {{ port }}"]
         running_config: "{{ output.stdout[2] }}"
   when: switchport.switchport == 'Disabled'
 
@@ -34,20 +34,20 @@
     - name: "nxos: set the switchport mode to access"
       nxos_config:
         lines: "switchport mode access"
-        parents: ["interface {{ ml2_port_name }}"]
+        parents: ["interface {{ port }}"]
       when: switchport.oper_mode != 'access'
 
     - name: "nxos: configure port settings"
       nxos_config:
         lines:
-          - "description {{ ml2_port_description }}"
-          - "switchport access vlan {{ ml2_segmentation_id }}"
-        parents: ["interface {{ ml2_port_name }}"]
+          - "description {{ port_description }}"
+          - "switchport access vlan {{ vlan_id }}"
+        parents: ["interface {{ port }}"]
         running_config: "{{ output.stdout[2] }}"
 
     - name: "nxos: administratively enable the port"
       nxos_config:
         lines: "no shutdown"
-        parents: ["interface {{ ml2_port_name }}"]
+        parents: ["interface {{ port }}"]
       when: interface.admin_state == 'down'
   when: switchport.switchport == 'Enabled'
