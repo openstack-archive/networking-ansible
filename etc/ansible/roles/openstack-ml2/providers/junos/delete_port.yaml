@@ -3,6 +3,6 @@
   junos_command:
     commands:
       - config
-      - "delete interfaces {{ ml2_port_name }}"
+      - "delete interfaces {{ port }}"
       - commit
   connection: network_cli

@@ -3,7 +3,7 @@
   junos_command:
     commands:
       - config
-      - "set interfaces {{ ml2_port_name }} unit 0 family ethernet-switching interface-mode access"
-      - "set interfaces {{ ml2_port_name }} unit 0 family ethernet-switching vlan members {{ ml2_segmentation_id }}"
+      - "set interfaces {{ port }} unit 0 family ethernet-switching interface-mode access"
+      - "set interfaces {{ port }} unit 0 family ethernet-switching vlan members {{ vlan_id }}"
       - commit
   connection: network_cli

@@ -2,8 +2,8 @@
 - name: "nxos: run create vlan using network_cli"
   nxos_config:
     lines:
-      - "name {{ ml2_segmentation_name }}"
+      - "name {{ vlan_name }}"
     parents:
-      - "vlan {{ ml2_segmentation_id }}"
+      - "vlan {{ vlan_id }}"
   connection: network_cli
 

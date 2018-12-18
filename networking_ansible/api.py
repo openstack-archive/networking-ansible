@@ -33,7 +33,7 @@ class NetworkingAnsible(object):
 
         :param task: name of task in openstack-ml2 ansible role
         :param host_name: name of a host defined in ml2 conf ini files
-        :param segmentation_id: vlan id of the network
+        :param vlan_id: vlan id of the network
         :param switch_port: port name on the switch (optional)
 
         See etc/ansible/roles/openstack-ml2/README.md for an exmaple playbook
@@ -51,12 +51,12 @@ class NetworkingAnsible(object):
                     'tasks_from': task,
                 },
                 'vars': {
-                    'segmentation_id': vlan_id,
+                    'vlan_id': vlan_id,
                 }
             }]
         }]
         if port:
-            playbook[0]['tasks'][0]['vars']['port_name'] = port
+            playbook[0]['tasks'][0]['vars']['port'] = port
             playbook[0]['tasks'][0]['vars']['port_description'] = port
 
         # invoke ansible networking via ansible runner
