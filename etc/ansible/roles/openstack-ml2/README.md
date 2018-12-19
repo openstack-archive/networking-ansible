@@ -9,8 +9,6 @@ Requirements
 Role Variables
 --------------
 
-* junos_enable_netconf
-
 * segmenation_id
 * segmentation_name
 

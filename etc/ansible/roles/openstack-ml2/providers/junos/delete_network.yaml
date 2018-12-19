@@ -1,4 +1,12 @@
 ---
-- name: "junos: run delete_network using netconf"
-  include_tasks: netconf.yaml
-
+- name: "junos: run delete vlan using network_cli"
+  junos_command:
+    commands:
+      - config
+      - "delete vlans {{ ml2_segmentation_name }}"
+      - commit
+  register: result
+  retries: 10
+  delay: 5
+  until: result.msg is not defined or result.msg.find('configuration database locked by:') == -1
+  connection: network_cli
