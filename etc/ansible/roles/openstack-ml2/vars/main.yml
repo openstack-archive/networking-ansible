@@ -1,4 +1,8 @@
 ---
+# Default retry and delay values
+_retries: 10
+_delay: 7
+
 # vars required for managing ML2 networks
 segmentation_id: null
 segmentation_name: null
