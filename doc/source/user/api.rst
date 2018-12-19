@@ -50,6 +50,8 @@ execute switch level network configuration.
       net_ans.create_vlan(host, vlan_id)
       # configure a port in access mode on the VLAN
       net_ans.update_access_port(host, port, vlan_id)
+      # configure a port in trunk mode with default VLAN and additional vlan
+      net_ans.conf_trunk_port(host, port, vlan_id, [73])
       # shutdown the port
       net_ans.delete_port(host, port)
       # delete the VLAN
