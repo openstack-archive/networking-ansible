@@ -29,17 +29,19 @@ class NetworkingAnsible(object):
         self.inventory = inventory
 
     def _run_task(self, task, hostname,
-                  port=None, vlan_id=None, vlan_name=None):
+                  port=None, vlan_id=None, vlan_name=None, vlans=None):
         """Run a task.
 
         :param task: name of task in openstack-ml2 ansible role
-        :param hostname: name of a host defined in ml2 conf ini files
+        :param hostname: name of a host defined in the ansible inventory
         :param port: switchport name on the switch (optional)
-        :param vlan_id: VLAN ID of the network
+        :param vlan_id: VLAN ID of the network, default VLAN for trunk ports
         :param vlan_name: VLAN's name/description
+        :param vlans: A list of additional VLAN's for trunk port configuration
 
         See etc/ansible/roles/openstack-ml2/README.md for an exmaple playbook
         """
+        vlans = vlans or []
 
         # build out the ansible playbook
         playbook = [{
@@ -59,6 +61,8 @@ class NetworkingAnsible(object):
         }]
         if vlan_name:
             playbook[0]['tasks'][0]['vars']['vlan_name'] = vlan_name
+        if vlans:
+            playbook[0]['tasks'][0]['vars']['vlans'] = vlans
         if port:
             playbook[0]['tasks'][0]['vars']['port'] = port
             playbook[0]['tasks'][0]['vars']['port_description'] = port
@@ -96,11 +100,26 @@ class NetworkingAnsible(object):
         :param hostname: The name of the host in Ansible inventory.
         :param port: The port to configure.
         :param vlan_id: The vlan_id to assign to the port.
-                       An empty or None value will default to the
-                       target device's default VLAN assignment. This
-                       default is assigned in the ansible role
+                        An empty or None value will default to the
+                        target device's default VLAN assignment. This
+                        default is assigned in the ansible role.
         """
         return self._run_task('update_access_port', hostname, port, vlan_id)
+
+    def conf_trunk_port(self, hostname, port, vlan_id, vlans):
+        """Configure trunk port w/defaut vlan and optional additional vlans
+
+        :param hostname: The name of the host in Ansible inventory.
+        :param port: The port to configure.
+        :param vlan_id: the default VLAN ID to assign to the port
+                        An empty or None value will default to the
+                        target device's default VLAN assignment. This
+                        default is assigned in the ansible role.
+        :param vlans: A list of VLAN IDs to add to the port in addition
+                      to the default VLAN.
+        """
+        return self._run_task('conf_trunk_port',
+                              hostname, port, vlan_id, vlans)
 
     def delete_port(self, hostname, port):
         """Delete port configuration.
