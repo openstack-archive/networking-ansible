@@ -39,6 +39,10 @@ networking-ansible.
 
   Defines the Ansible tasks to assign a VLAN to a switchport in access mode.
 
+* conf_trunk_port.yaml
+
+  Defines the Ansible tasks to configure a switchport in trunk mode.
+
 * delete_port.yaml
 
   Defines the Ansible tasks to remove configuration from a switchport.
