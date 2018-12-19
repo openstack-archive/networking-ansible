@@ -1,4 +1,7 @@
 ---
+# params to impliment trunking
+trunked_vlans: "{{ trunked_vlans }}"
+
 # params to implement port resource
 #
 port_name: "{{ port_name }}"
