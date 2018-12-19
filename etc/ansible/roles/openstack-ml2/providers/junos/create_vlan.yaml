@@ -1,3 +1,8 @@
 ---
-- name: "junos: run create vlan using netconf"
-  include_tasks: netconf.yaml
+- name: "junos: run create vlan using network_cli"
+  junos_command:
+    commands:
+      - config
+      - "set vlans {{ ml2_segmentation_name }} vlan-id {{ ml2_segmentation_id }}"
+      - commit
+  connection: network_cli

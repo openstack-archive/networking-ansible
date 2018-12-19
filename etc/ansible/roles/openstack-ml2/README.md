@@ -9,8 +9,6 @@ Requirements
 Role Variables
 --------------
 
-* junos_enable_netconf
-
 * ml2_segmenation_id
 * ml2_segmentation_name (default depends on provider)
 
