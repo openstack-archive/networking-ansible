@@ -43,8 +43,27 @@ to perform a task that networking-ansible is able to complete. The interaction
 with ansible is designed in a library style that will allow direct import and
 invocation in python independant of a running OpenStack deployment.
 
-Features
---------
+API Features
+------------
+The following matrix indicates which features have been implmented.
++--------------------+-------------+-------+------+-----+---------+
+|                    | openvswitch | junos | nxos | eos | cumulus |
++--------------------+-------------+-------+------+-----+---------+
+| Create VLAN        |     N/A     |   Y   |  Y   |  Y  |    Y    |
++--------------------+-------------+-------+------+-----+---------+
+| Delete VLAN        |     N/A     |   Y   |  Y   |  Y  |    Y    |
++--------------------+-------------+-------+------+-----+---------+
+| Delete Port        |      Y      |   Y   |  Y   |  Y  |    Y    |
++--------------------+-------------+-------+------+-----+---------+
+| Config Access Port |      Y      |   Y   |  Y   |  Y  |    Y    |
++--------------------+-------------+-------+------+-----+---------+
+| Config Trunk Port  |      N      |   N   |  N   |  N  |    N    |
++--------------------+-------------+-------+------+-----+---------+
 
-* Create and delete VLANs
-* Configure a port in access mode and assign a it to a VLAN
+ML2 Implimentation Mapping
+--------------------------
+create_network_postcommit: Creates a VLAN
+delete_network_postcommit: Deletes a VLAN
+update_port_postcommit: Deletes the old port if bound
+delete_port_postcommit: Deletes a port
+bind_port: Configures an access port
