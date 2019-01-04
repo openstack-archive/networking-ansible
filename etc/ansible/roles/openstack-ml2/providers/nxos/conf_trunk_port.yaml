@@ -1,3 +1,35 @@
 ---
-- fail:
-    msg: Trunk port configuration is not implimented for nxos
+- name: "nxos: reset interface to defaults"
+  nxos_config:
+    lines: "default interface {{ port }}"
+  connection: network_cli
+
+- name: "nxos: set the switchport mode to trunk"
+  nxos_config:
+    lines: "switchport mode trunk"
+    parents: ["interface {{ port }}"]
+  connection: network_cli
+
+- name: "nxos: build port configuration"
+  nxos_config:
+    lines:
+      - "description {{ port_description }}"
+      - "switchport"
+      - "switchport trunk native vlan {{ _vlan_id }}"
+      - "no shutdown"
+    parents: ["interface {{ port }}"]
+  connection: network_cli
+
+- name: "nxos: set allowed vlans"
+  nxos_config:
+    lines:
+      - "switchport trunk allow vlan none"
+      - "switchport trunk allow vlan {{ _vlan_id }}{% for vlan in vlans %},{{ vlan }}{% endfor %}"
+    parents: ["interface {{ port }}"]
+  connection: network_cli
+
+- name: "nxos: administratively enable the port"
+  nxos_config:
+    lines: "no shutdown"
+    parents: ["interface {{ port }}"]
+  connection: network_cli
