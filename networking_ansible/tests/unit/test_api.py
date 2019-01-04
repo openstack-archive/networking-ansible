@@ -102,10 +102,10 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
 class TestVlanAccessPort(base.NetworkingAnsibleTestCase):
 
     def test_assign_vlan_access_port(self, mock_run_task):
-        self.mech.ansnet.update_access_port(self.testhost,
+        self.mech.ansnet.conf_access_port(self.testhost,
                                             self.testport,
                                             self.testsegid)
-        mock_run_task.assert_called_once_with('update_access_port',
+        mock_run_task.assert_called_once_with('conf_access_port',
                                               self.testhost,
                                               self.testport,
                                               self.testsegid)

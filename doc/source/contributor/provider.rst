@@ -35,7 +35,7 @@ networking-ansible.
 
   Defines the Ansible tasks to delete a VLAN on a switch.
 
-* update_access_port.yaml
+* conf_access_port.yaml
 
   Defines the Ansible tasks to assign a VLAN to a switchport in access mode.
 

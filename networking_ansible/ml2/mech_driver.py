@@ -291,9 +291,9 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
 
         # Assign port to network
         try:
-            self.ansnet.update_access_port(switch_name,
-                                           switch_port,
-                                           segmentation_id)
+            self.ansnet.conf_access_port(switch_name,
+                                         switch_port,
+                                         segmentation_id)
             context.set_binding(segments[0][ml2api.ID],
                                 portbindings.VIF_TYPE_OTHER, {})
             LOG.info('Port {neutron_port} has been plugged into '
