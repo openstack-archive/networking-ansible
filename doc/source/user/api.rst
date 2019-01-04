@@ -49,7 +49,7 @@ execute switch level network configuration.
       # create the VLAN
       net_ans.create_vlan(host, vlan_id)
       # configure a port in access mode on the VLAN
-      net_ans.update_access_port(host, port, vlan_id)
+      net_ans.conf_access_port(host, port, vlan_id)
       # shutdown the port
       net_ans.delete_port(host, port)
       # delete the VLAN

@@ -50,44 +50,44 @@ class NetAnsibleML2Base(test_plugin.Ml2PluginV2TestCase):
         super(NetAnsibleML2Base, self).setUp()
 
 
-@mock.patch.object(api.NetworkingAnsible, 'update_access_port')
+@mock.patch.object(api.NetworkingAnsible, 'conf_access_port')
 @mock.patch('networking_ansible.ml2.mech_driver.provisioning_blocks',
             autospec=True)
 class TestBindPort(base.NetworkingAnsibleTestCase):
     def test_bind_port_info_no_mac(self,
                                    mock_prov_blks,
-                                   mock_update_access_port):
+                                   mock_conf_access_port):
         self.mech.bind_port(self.mock_port_context)
-        mock_update_access_port.assert_called_once()
+        mock_conf_access_port.assert_called_once()
 
     def test_bind_port_mac_no_info_local_link_info(self,
                                                    mock_prov_blks,
-                                                   mock_update_access_port):
+                                                   mock_conf_access_port):
         bind_prof = 'binding:profile'
         self.mock_port_context.current[bind_prof] = self.lli_no_info
         self.mech.bind_port(self.mock_port_context)
-        mock_update_access_port.assert_called_once()
+        mock_conf_access_port.assert_called_once()
 
     @mock.patch('networking_ansible.ml2.mech_driver.'
                 'AnsibleMechanismDriver._is_port_supported')
     def test_bind_port_port_not_supported(self,
                                           mock_port_supported,
-                                          mock_update_access_port,
+                                          mock_conf_access_port,
                                           mock_prov_blks):
         mock_port_supported.return_value = False
         self.mech.bind_port(self.mock_port_context)
-        mock_update_access_port.assert_not_called()
+        mock_conf_access_port.assert_not_called()
 
     def test_bind_port_no_local_link_info(self,
                                           mock_prov_blks,
-                                          mock_update_access_port):
+                                          mock_conf_access_port):
         bind_prof = 'binding:profile'
         local_link_info = 'local_link_information'
         del self.mock_port_context.current[bind_prof][local_link_info]
         self.assertRaises(netans_ml2exc.LocalLinkInfoMissingException,
                           self.mech.bind_port,
                           self.mock_port_context)
-        mock_update_access_port.assert_not_called()
+        mock_conf_access_port.assert_not_called()
 
 
 class TestIsPortSupported(base.NetworkingAnsibleTestCase):
@@ -390,7 +390,7 @@ class TestML2PluginIntegration(NetAnsibleML2Base):
                 self.fmt, req.get_response(self.api))
 
             m_run_task.called_once_with(
-                'update_access_port',
+                'conf_access_port',
                 self.HOSTS[0],
                 self.LOCAL_LINK_INFORMATION[0]['port_id'],
                 self.network_spec[provider_net.SEGMENTATION_ID])
