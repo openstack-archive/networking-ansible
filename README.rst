@@ -58,7 +58,7 @@ The following matrix indicates which features have been implmented.
 +--------------------+-------------+-------+------+-----+---------+----------+
 | Config Access Port |      Y      |   Y   |  Y   |  Y  |    Y    |    Y     |
 +--------------------+-------------+-------+------+-----+---------+----------+
-| Config Trunk Port  |      N      |   Y   |  N   |  N  |    N    |    N     |
+| Config Trunk Port  |      N      |   Y   |  Y   |  N  |    N    |    N     |
 +--------------------+-------------+-------+------+-----+---------+----------+
 
 ML2 Implimentation Mapping
