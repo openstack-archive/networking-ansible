@@ -16,4 +16,4 @@
 - name: include and run device provider specific tasks
   include_tasks: run.yaml
   vars:
-    network_action: update_access_port
+    network_action: conf_access_port

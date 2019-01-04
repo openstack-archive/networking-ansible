@@ -90,7 +90,7 @@ class NetworkingAnsible(object):
         """
         return self._run_task('delete_vlan', hostname, vlan_id=vlan_id)
 
-    def update_access_port(self, hostname, port, vlan_id):
+    def conf_access_port(self, hostname, port, vlan_id):
         """Configure access port on a vlan.
 
         :param hostname: The name of the host in Ansible inventory.
@@ -100,7 +100,7 @@ class NetworkingAnsible(object):
                        target device's default VLAN assignment. This
                        default is assigned in the ansible role
         """
-        return self._run_task('update_access_port', hostname, port, vlan_id)
+        return self._run_task('conf_access_port', hostname, port, vlan_id)
 
     def delete_port(self, hostname, port):
         """Delete port configuration.
