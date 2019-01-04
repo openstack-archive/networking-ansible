@@ -70,7 +70,7 @@ class TestRunTask(base.NetworkingAnsibleTestCase):
         self.assertEqual(
             self.testport,
             mock_ans_runner.run.call_args[1]['playbook'][0]['tasks']
-                                         [0]['vars']['port'])
+                                         [0]['vars']['port_name'])
         # Assert switch_port is set
         self.assertEqual(
             self.testport,
