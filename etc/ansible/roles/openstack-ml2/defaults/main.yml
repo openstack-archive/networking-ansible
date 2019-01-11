@@ -1,5 +1,5 @@
 ---
 # params to implement port resource
 #
-port: "{{ port }}"
+port_name: "{{ port_name }}"
 port_description: "{{ port_description }}"

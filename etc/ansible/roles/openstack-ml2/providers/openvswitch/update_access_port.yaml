@@ -2,7 +2,7 @@
 - name: "openvswitch: run update_port"
   openvswitch_db:
     table: Port
-    record: "{{ port }}"
+    record: "{{ port_name }}"
     col: tag
     value: "{{ _vlan_id }}"
   become: yes

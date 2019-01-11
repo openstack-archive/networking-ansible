@@ -60,7 +60,7 @@ class NetworkingAnsible(object):
         if vlan_name:
             playbook[0]['tasks'][0]['vars']['vlan_name'] = vlan_name
         if port:
-            playbook[0]['tasks'][0]['vars']['port'] = port
+            playbook[0]['tasks'][0]['vars']['port_name'] = port
             playbook[0]['tasks'][0]['vars']['port_description'] = port
 
         # invoke ansible networking via ansible runner
