@@ -25,8 +25,6 @@ function ansible_workarounds {
     python setup.py build
     sudo python setup.py install
     popd
-
-    sudo pip install --upgrade pexpect===4.5.0
 }
 
 function pre_install {
