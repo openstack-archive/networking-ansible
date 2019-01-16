@@ -228,6 +228,14 @@ class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
         self.mech.update_port_postcommit(self.mock_port_context)
         mock_prov_blks.provisioning_complete.assert_called_once()
 
+    def test_update_port_postcommit_current_no_lli(self,
+                                                   mock_prov_blks,
+                                                   mock_delete_port,
+                                                   mock_port_bound):
+        self.mock_port_context.current[bind_prof] = self.lli_no_info
+        self.mech.update_port_postcommit(self.mock_port_context)
+        mock_prov_blks.provisioning_complete.assert_called_once()
+
     def test_update_port_postcommit_original(self,
                                              mock_prov_blks,
                                              mock_delete_port,
@@ -246,6 +254,16 @@ class TestUpdatePortPostCommit(base.NetworkingAnsibleTestCase):
                           self.mech.update_port_postcommit,
                           self.mock_port_context)
         mock_delete_port.assert_called_once()
+
+    def test_update_port_postcommit_original_no_lli(self,
+                                                   mock_prov_blks,
+                                                   mock_delete_port,
+                                                   mock_port_bound):
+        self.mock_port_context.original[bind_prof] = self.lli_no_info
+        self.assertRaises(
+            exceptions.LocalLinkInfoMissingException,
+            self.mech.update_port_postcommit,
+            self.mock_port_context)
 
     def test_update_port_postcommit_not_bound(self,
                                               mock_prov_blks,
