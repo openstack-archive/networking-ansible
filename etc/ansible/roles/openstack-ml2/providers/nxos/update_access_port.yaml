@@ -6,6 +6,7 @@
       - "show interface {{ port_name }} | json"
       - "show running-config"
   register: output
+  connection: network_cli
 
 - name: "nxos: set port facts"
   set_fact:
@@ -17,6 +18,7 @@
     - name: "nxos: reset interface to defaults"
       nxos_config:
         lines: "default interface {{ port_name }}"
+      connection: network_cli
 
     - name: "nxos: build port configuration"
       nxos_config:
@@ -27,6 +29,7 @@
           - "no shutdown"
         parents: ["interface {{ port_name }}"]
         running_config: "{{ output.stdout[2] }}"
+      connection: network_cli
   when: switchport.switchport == 'Disabled'
 
 - name: "nxos: port is configured as switchport"
@@ -36,6 +39,7 @@
         lines: "switchport mode access"
         parents: ["interface {{ port_name }}"]
       when: switchport.oper_mode != 'access'
+      connection: network_cli
 
     - name: "nxos: configure port settings"
       nxos_config:
@@ -44,10 +48,12 @@
           - "switchport access vlan {{ _vlan_id }}"
         parents: ["interface {{ port_name }}"]
         running_config: "{{ output.stdout[2] }}"
+      connection: network_cli
 
     - name: "nxos: administratively enable the port"
       nxos_config:
         lines: "no shutdown"
         parents: ["interface {{ port_name }}"]
       when: interface.admin_state == 'down'
+      connection: network_cli
   when: switchport.switchport == 'Enabled'
