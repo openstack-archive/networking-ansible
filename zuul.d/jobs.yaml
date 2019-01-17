@@ -45,9 +45,11 @@
         networking-ansible: git://git.openstack.org/openstack/networking-ansible.git
       devstack_services:
         # Glance services
+        glance: true
         g-api: false
         g-reg: false
         # Neutron services
+        neutron: true
         q-metering: false
         # Swift services
         s-account: false
