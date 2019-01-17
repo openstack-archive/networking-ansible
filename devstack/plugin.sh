@@ -28,7 +28,15 @@ function ansible_workarounds {
 }
 
 function pre_install {
-    :
+    # REVISIT(jlibosva): Ubuntu boxes use mawk by default which has a slightly
+    #                    different syntax than gawk.  mawk fails when merging
+    #                    local.conf with openstack config files.  gawk is a
+    #                    requirement of nova and when devstack is used without
+    #                    nova, gawk is not installed and the whole devstack
+    #                    deployment fails.  The real fix should go to devstack
+    #                    repository but until it's fixed there, we have this
+    #                    workarond to unblock the CI.
+    install_package gawk
 }
 
 
