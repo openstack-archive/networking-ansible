@@ -66,8 +66,9 @@ class TestWithOvs(base.NetAnsibleAdminBaseTest):
             network_id=network_id, name=self.ovs_port_name)['port']
         self.addCleanup(self.cleanup_port, port['id'])
 
-        host = self.os_admin.hypervisor_client.list_hypervisors(
-            )['hypervisors'][0]['hypervisor_hostname']
+        host = self.admin_agents_client.list_agents(
+            agent_type='Open vSwitch agent'
+        )['agents'][0]['host']
 
         update_args = {
             'device_owner': 'baremetal:none',
