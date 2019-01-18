@@ -146,10 +146,6 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
         state. It is up to the mechanism driver to ignore state or
         state changes that it does not know or care about.
         """
-        # Validate current locallink info
-        # Raises a LocalLink error if invalid
-        self._link_info_from_port(context.current)
-
         if self._is_port_bound(context.current):
             port = context.current
             provisioning_blocks.provisioning_complete(
