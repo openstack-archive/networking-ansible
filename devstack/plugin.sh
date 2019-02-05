@@ -7,10 +7,22 @@ NET_ANSIBLE_ROLES_DIR=$NET_ANSIBLE_DIR/etc/ansible/roles/
 
 ANSIBLE_ROLES_DIR=/etc/ansible/roles
 
-NET_ANSIBLE_OVS_BRIDGE=${NET_ANSIBLE_OVS_BRIDGE:-net-ans-br}
-NET_ANSIBLE_OVS_PORT=${NET_ANSIBLE_OVS_PORT:-net-ans-p0}
+NET_ANS_SWITCH_INI_FILE="/etc/neutron/plugins/ml2/ml2_conf_netansible.ini"
+OVS_SWITCH_SSH_KEY_FILENAME="ovs-switch"
+OVS_SWITCH_DATA_DIR="$DATA_DIR/ovs-switch"
+# NOTE(pas-ha) NEVER SET THIS TO ANY EXISTING USER!
+# you might get locked out of SSH when limitinig SSH sessions is enabled for this user,
+# AND THIS USER WILL BE DELETED TOGETHER WITH ITS HOME DIR ON UNSTACK/CLEANUP!!!
+# this is why it is left unconfigurable
+OVS_SWITCH_USER="ovs_manager"
+OVS_SWITCH_USER_HOME="$OVS_SWITCH_DATA_DIR/$OVS_SWITCH_USER"
+OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE="$OVS_SWITCH_USER_HOME/.ssh/authorized_keys"
+OVS_SWITCH_KEY_DIR="$OVS_SWITCH_DATA_DIR/keys"
+OVS_SWITCH_KEY_FILE=${OVS_SWITCH_KEY_FILE:-"$OVS_SWITCH_KEY_DIR/$OVS_SWITCH_SSH_KEY_FILENAME"}
 
-SSH_KEY_FILE=~/.ssh/id_rsa
+OVS_SWITCH_TEST_BRIDGE="ovsswitch"
+OVS_SWITCH_TEST_PORT="sw-port-01"
+
 
 function ansible_workarounds {
     sudo pip uninstall ansible -y || :
@@ -25,6 +37,56 @@ function ansible_workarounds {
     python setup.py build
     sudo python setup.py install
     popd
+}
+
+function create_ovs_manager_user {
+    # Give the non-root user the ability to run as **root** via ``sudo``
+    is_package_installed sudo || install_package sudo
+
+    if ! getent group $OVS_SWITCH_USER >/dev/null; then
+        echo "Creating a group called $OVS_SWITCH_USER"
+        sudo groupadd $OVS_SWITCH_USER
+    fi
+
+    if ! getent passwd $OVS_SWITCH_USER >/dev/null; then
+        echo "Creating a user called $OVS_SWITCH_USER"
+        mkdir -p $OVS_SWITCH_USER_HOME
+        sudo useradd -g $OVS_SWITCH_USER -s /bin/bash -d $OVS_SWITCH_USER_HOME -m $OVS_SWITCH_USER
+    fi
+
+    echo "Giving $OVS_SWITCH_USER user passwordless sudo privileges"
+    # UEC images ``/etc/sudoers`` does not have a ``#includedir``, add one
+    sudo grep -q "^#includedir.*/etc/sudoers.d" /etc/sudoers ||
+        echo "#includedir /etc/sudoers.d" | sudo tee -a /etc/sudoers
+    ( umask 226 && echo "$OVS_SWITCH_USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/99_ovs_manager )
+
+}
+
+function configure_switch_ssh_keypair {
+    if [[ ! -d $OVS_SWITCH_USER_HOME/.ssh ]]; then
+        sudo mkdir -p $OVS_SWITCH_USER_HOME/.ssh
+        sudo chmod 700 $OVS_SWITCH_USER_HOME/.ssh
+    fi
+    # copy over stack user's authorized_keys to OVS_SWITCH_USER
+    # mostly needed for multinode gate job
+    if [[ -e "$HOME/.ssh/authorized_keys" ]];then
+        cat "$HOME/.ssh/authorized_keys" | sudo tee -a $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE
+    fi
+    if [[ ! -e $OVS_SWITCH_KEY_FILE ]]; then
+        if [[ ! -d $(dirname $OVS_SWITCH_KEY_FILE) ]]; then
+            mkdir -p $(dirname $OVS_SWITCH_KEY_FILE)
+        fi
+        ssh-keygen -q -t rsa -P '' -f $OVS_SWITCH_KEY_FILE
+    fi
+    # NOTE(vsaienko) check for new line character, add if doesn't exist.
+    if [[ "$(sudo tail -c1 $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE | wc -l)" == "0" ]]; then
+        echo "" | sudo tee -a $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE
+    fi
+    cat $OVS_SWITCH_KEY_FILE.pub | sudo tee -a $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE
+    # remove duplicate keys.
+    sudo sort -u -o $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE
+    sudo chown $OVS_SWITCH_USER:$OVS_SWITCH_USER $OVS_SWITCH_KEY_AUTHORIZED_KEYS_FILE
+    sudo chown -R $OVS_SWITCH_USER:$OVS_SWITCH_USER $OVS_SWITCH_USER_HOME
 }
 
 function pre_install {
@@ -55,6 +117,20 @@ function install {
     install_ansible_roles
 }
 
+function add_ovs_switch_to_ml2_config {
+    local switch_name=$1
+    local key_file=$2
+    local username=$3
+    local ip=$4
+    local switch_mac=$5
+
+    populate_ml2_config $NET_ANS_SWITCH_INI_FILE $switch_name ansible_network_os=openvswitch
+    populate_ml2_config $NET_ANS_SWITCH_INI_FILE $switch_name username=$username
+    populate_ml2_config $NET_ANS_SWITCH_INI_FILE $switch_name ansible_ssh_private_key_file=$key_file
+    populate_ml2_config $NET_ANS_SWITCH_INI_FILE $switch_name ansible_host=$ip
+    populate_ml2_config $NET_ANS_SWITCH_INI_FILE $switch_name manage_vlans=False
+    populate_ml2_config $NET_ANS_SWITCH_INI_FILE $switch_name mac=$switch_mac
+}
 
 function post_config {
     # The function does following:
@@ -72,6 +148,35 @@ function post_config {
     populate_ml2_config /$Q_PLUGIN_CONF_FILE ml2 mechanism_drivers=$Q_ML2_PLUGIN_MECHANISM_DRIVERS
 
     ansible_workarounds
+
+    create_ovs_manager_user
+    configure_switch_ssh_keypair
+
+    sudo ovs-vsctl --may-exist add-br $OVS_SWITCH_TEST_BRIDGE
+    sudo ovs-vsctl --may-exist add-port $OVS_SWITCH_TEST_BRIDGE $OVS_SWITCH_TEST_PORT -- set Interface $OVS_SWITCH_TEST_PORT type=internal
+
+    # Create generic_switch ml2 config
+    for switch in $OVS_SWITCH_TEST_BRIDGE $IRONIC_VM_NETWORK_BRIDGE; do
+        local bridge_mac
+        bridge_mac=$(ip link show dev $switch | awk '/ether [A-Za-z0-9:]+/{ print $2 }')
+        switch="ansible:$switch"
+        add_ovs_switch_to_ml2_config $switch $OVS_SWITCH_KEY_FILE $OVS_SWITCH_USER localhost $bridge_mac
+    done
+    echo "HOST_TOPOLOGY: $HOST_TOPOLOGY"
+    echo "HOST_TOPOLOGY_SUBNODES: $HOST_TOPOLOGY_SUBNODES"
+    if [ -n "$HOST_TOPOLOGY_SUBNODES" ]; then
+        # NOTE(vsaienko) with multinode topology we need to add switches from all
+        # the subnodes to the config on primary node
+        local cnt=0
+        local section
+        for node in $HOST_TOPOLOGY_SUBNODES; do
+            cnt=$((cnt+1))
+            section="ansible:sub${cnt}${IRONIC_VM_NETWORK_BRIDGE}"
+            add_ovs_switch_to_ml2_config $section $OVS_SWITCH_KEY_FILE $OVS_SWITCH_USER $node
+        done
+    fi
+
+    neutron_server_config_add $NET_ANS_SWITCH_INI_FILE
 }
 
 
@@ -82,20 +187,11 @@ function extra {
 
 function unstack {
     echo_summary "Unstack"
+    # TODO(jlibosva): Remove the created resources
 }
 
 function test-config {
     echo_summary "Test config"
-
-    # Create resources for openvswitch
-    sudo ovs-vsctl --may-exist add-br $NET_ANSIBLE_OVS_BRIDGE -- --may-exist add-port $NET_ANSIBLE_OVS_BRIDGE $NET_ANSIBLE_OVS_PORT -- set Interface $NET_ANSIBLE_OVS_PORT type=internal
-    sudo ovs-vsctl set Port $NET_ANSIBLE_OVS_PORT tag=[]
-
-    # Allow ansible on localhost
-    [ -f $SSH_KEY_FILE ] || ssh-keygen -q -t rsa -P '' -f $SSH_KEY_FILE
-    [ -f ${SSH_KEY_FILE}.pub ] || ssh-keygen -y -f $SSH_KEY_FILE > ${SSH_KEY_FILE}.pub
-    cat ${SSH_KEY_FILE}.pub >> ~/.ssh/authorized_keys
-    chmod 600 ~/.ssh/authorized_keys
 }
 
 function clean {
