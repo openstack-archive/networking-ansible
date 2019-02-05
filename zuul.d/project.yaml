@@ -3,6 +3,9 @@
     check:
       jobs:
         - networking-ansible-tempest-ovs
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible:
+            voting: false
+
     gate:
       jobs:
         - networking-ansible-tempest-ovs
