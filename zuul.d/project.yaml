@@ -2,14 +2,11 @@
     name: networking-ansible-tempest-jobs
     check:
       jobs:
-        - networking-ansible-tempest-ovs
-    gate:
-      jobs:
-        - networking-ansible-tempest-ovs
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible:
+            voting: false
 
 - project:
     templates:
-      - networking-ansible-tempest-jobs
       - openstack-cover-jobs-neutron
       - openstack-python-jobs-neutron
       - openstack-python35-jobs-neutron
