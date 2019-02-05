@@ -1,0 +1,42 @@
+- hosts: all
+  name: Copy ssh keys from too ~stack
+  tasks:
+    - shell:
+        cmd: |
+          set -e
+          set -x
+
+          sudo mkdir -p ~stack/.ssh
+          sudo cp ~root/.ssh/id_rsa.pub ~root/.ssh/id_rsa ~stack/.ssh
+          sudo chmod 700 ~stack/.ssh
+          sudo chown -R stack ~stack
+        executable: /bin/bash
+
+- hosts: all
+  name: workaround for multinode wiring on Rocky
+  vars:
+    host_bridges:
+      controller: brbm
+      compute1: sub1brbm
+  tasks:
+    - name: create br_ironic_vxlan for ironic just to not fail its devstack plugin
+      become: yes
+      openvswitch_bridge:
+        bridge: br_ironic_vxlan
+        state: present
+
+    - name: create VM bridges
+      become: yes
+      openvswitch_bridge:
+        bridge: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ host_bridges.controller }}"
+        - "{{ host_bridges.compute1 }}"
+
+    - name: wire br-infra with VM bridges
+      become: yes
+      shell: |
+        ovs-vsctl add-port {{ host_bridges[inventory_hostname] }} phy-brbm-vxlan -- set interface phy-brbm-vxlan type=patch
+        ovs-vsctl add-port br-infra phy-vxlan-brbm -- set interface phy-vxlan-brbm type=patch -- set interface phy-vxlan-brbm options:peer=phy-brbm-vxlan
+        ovs-vsctl set interface phy-brbm-vxlan options:peer=phy-vxlan-brbm
