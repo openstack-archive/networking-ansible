@@ -1,26 +1,28 @@
 - project-template:
-    name: networking-ansible-tempest-jobs
+    name: networking-ansible-tempest-jobs-rocky
     check:
       jobs:
-        - networking-ansible-tempest-ovs
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible:
+            voting: false
+        - my-new-test-test
         - openstack-tox-docs:
             required-projects:
               - openstack/neutron
     gate:
       jobs:
-        - networking-ansible-tempest-ovs
         - openstack-tox-docs:
             required-projects:
               - openstack/neutron
 
 - project:
     templates:
-      - networking-ansible-tempest-jobs
+      - networking-ansible-tempest-jobs-rocky
       - openstack-cover-jobs-neutron
       - openstack-python-jobs-neutron
       - openstack-python35-jobs-neutron
       - periodic-jobs-with-neutron-lib-master
       - check-requirements
       - docs-on-readthedocs
+
     vars:
       rtd_webhook_id: '45496'
