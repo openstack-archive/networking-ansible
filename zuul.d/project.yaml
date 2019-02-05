@@ -2,10 +2,8 @@
     name: networking-ansible-tempest-jobs
     check:
       jobs:
-        - networking-ansible-tempest-ovs
-    gate:
-      jobs:
-        - networking-ansible-tempest-ovs
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible:
+            voting: false
 
 - project:
     templates:
@@ -17,6 +15,7 @@
       - check-requirements
       - docs-on-readthedocs
     check:
+      debug: true
       jobs:
         - openstack-tox-docs:
             required-projects:
