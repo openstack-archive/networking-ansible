@@ -50,7 +50,9 @@ class BaseTestCase(base.BaseTestCase):
 
         self.ansconfig = config
         self.testhost = 'testhost'
-        self.testmac = '01:23:45:67:89:AB'
+        # using lowercase to ensure case sensitivity is handled correctly
+        # the code applys upper() to everything
+        self.testmac = '01:23:45:67:89:ab'
         self.empty_inventory = {'all': {'hosts': {}}}
         self.inventory = {
             'all': {

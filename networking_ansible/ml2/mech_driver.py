@@ -316,14 +316,14 @@ class AnsibleMechanismDriver(ml2api.MechanismDriver):
                   'binding:profile'.format(port_id=port['id'])
             LOG.debug(msg)
             raise exceptions.LocalLinkInfoMissingException(msg)
-        switch_mac = local_link_info[0].get('switch_id')
+        switch_mac = local_link_info[0].get('switch_id', '').upper()
         switch_name = local_link_info[0].get('switch_info')
         switch_port = local_link_info[0].get('port_id')
         # fill in the switch name if mac exists but name is not defined
         # this provides support for introspection when the switch's mac is
         # also provided in the ML2 conf for ansible-networking
         if not switch_name and switch_mac in self.mac_map:
-            switch_name = self.mac_map[switch_mac.upper()]
+            switch_name = self.mac_map[switch_mac]
         segmentation_id = network.get('provider:segmentation_id', '')
         return switch_name, switch_port, segmentation_id
 
