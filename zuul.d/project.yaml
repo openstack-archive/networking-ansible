@@ -3,6 +3,9 @@
     check:
       jobs:
         - networking-ansible-tempest-ovs
+        - openstack-tox-cover:
+            required-projects:
+              - openstack/neutron
     gate:
       jobs:
         - networking-ansible-tempest-ovs
