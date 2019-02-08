@@ -10,3 +10,7 @@
 - project:
     templates:
       - networking-ansible-tempest-jobs
+      - openstack-cover-jobs-neutron
+      - openstack-python-jobs-neutron
+      - openstack-python35-jobs-neutron
+      - periodic-jobs-with-neutron-lib-master
