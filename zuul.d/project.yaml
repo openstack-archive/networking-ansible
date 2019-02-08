@@ -3,9 +3,6 @@
     check:
       jobs:
         - networking-ansible-tempest-ovs
-        - openstack-tox-cover:
-            required-projects:
-              - openstack/neutron
     gate:
       jobs:
         - networking-ansible-tempest-ovs
@@ -13,3 +10,9 @@
 - project:
     templates:
       - networking-ansible-tempest-jobs
+      - openstack-cover-jobs-neutron
+      - openstack-python-jobs-neutron
+      - openstack-python35-jobs-neutron
+      - periodic-jobs-with-neutron-lib-master
+      - check-requirements
+      - docs-on-readthedocs
