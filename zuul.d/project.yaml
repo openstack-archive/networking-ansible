@@ -22,3 +22,5 @@
       - periodic-jobs-with-neutron-lib-master
       - check-requirements
       - docs-on-readthedocs
+    vars:
+      rtd_webhook_id: '45496'
