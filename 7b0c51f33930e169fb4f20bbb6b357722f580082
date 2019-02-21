@@ -1,0 +1,8 @@
+Code-Review+2: Dan Radez <dradez@redhat.com>
+Workflow+1: Dan Radez <dradez@redhat.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Thu, 21 Feb 2019 13:59:07 +0000
+Reviewed-on: https://review.openstack.org/634918
+Project: openstack/networking-ansible
+Branch: refs/heads/master
