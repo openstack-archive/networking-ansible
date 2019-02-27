@@ -90,4 +90,4 @@ managed by networking-ansible.
 
      .. code-block:: ini
 
-       $ service neturon-server restart
+       $ service neutron-server restart
