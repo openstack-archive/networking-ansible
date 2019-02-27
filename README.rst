@@ -46,9 +46,10 @@ invocation in python independant of a running OpenStack deployment.
 API Features
 ------------
 The following matrix indicates which features have been implmented.
+
 +--------------------+-------------+-------+------+-----+---------+----------+
 |                    | openvswitch | junos | nxos | eos | cumulus | dellos10 |
-+--------------------+-------------+-------+------+-----+---------+----------+
++====================+=============+=======+======+=====+=========+==========+
 | Create VLAN        |     N/A     |   Y   |  Y   |  Y  |    Y    |    Y     |
 +--------------------+-------------+-------+------+-----+---------+----------+
 | Delete VLAN        |     N/A     |   Y   |  Y   |  Y  |    Y    |    Y     |
