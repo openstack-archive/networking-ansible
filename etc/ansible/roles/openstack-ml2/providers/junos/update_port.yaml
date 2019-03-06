@@ -7,7 +7,7 @@
       - "set interfaces {{ ml2_port_name }} unit 0 family ethernet-switching vlan members {{ ml2_segmentation_id }}"
       - commit
   register: result
-  retries: 10
-  delay: 5
+  retries: {{ _retries }}
+  delay: {{ _delay }}
   until: result.msg is not defined or result.msg.find('configuration database locked by:') == -1
   connection: network_cli
