@@ -41,7 +41,7 @@ managed by networking-ansible.
       ansible_network_os=junos
       ansible_host=10.10.2.250
       ansible_user=ansible
-      ansible_pass=password
+      ansible_ssh_pass=password
 
     * myhostname is an arbitrary internal identifier used only in ironic's link_local_information.
     * ansible_network_os is a valid Ansible Networking value to indicate switch type.
