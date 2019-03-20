@@ -14,8 +14,11 @@
 #    under the License.
 
 import ansible_runner
+import logging
 
 from networking_ansible import exceptions
+
+LOG = logging.getLogger(__name__)
 
 
 class NetworkingAnsible(object):
@@ -26,6 +29,10 @@ class NetworkingAnsible(object):
     """
 
     def __init__(self, inventory):
+        dep_msg = "This API is deprecated and will be removed next release. " \
+                  "It will be replaced by network-runner next release. " \
+                  "https://pypi.org/project/network-runner/"
+        LOG.warn(dep_msg)
         self.inventory = inventory
 
     def _run_task(self, task, hostname,
