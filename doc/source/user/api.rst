@@ -4,6 +4,9 @@
 Python API
 ==========
 
+*** The API is deprecated and will be removed next releases. Please migrate
+to https://pypi.org/project/network-runner/***
+
 Networking-Ansible can be called directly via python API. This method does not
 require a running OpenStack, with neutron.
 
