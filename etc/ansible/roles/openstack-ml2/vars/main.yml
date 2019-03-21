@@ -1,4 +1,8 @@
 ---
+# Default retry and delay values
+_retries: 10
+_delay: 7
+
 # vars required for managing ML2 networks
 segmentation_id: null
 segmentation_name: null
@@ -6,3 +10,6 @@ segmentation_name: null
 # vars required for managing ML2 ports
 port_name: null
 port_description: null
+
+# vendor specific variables
+junos_retries_msg: 'configuration database locked by:'
