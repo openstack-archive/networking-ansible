@@ -2,8 +2,10 @@
     name: networking-ansible-tempest-jobs
     check:
       jobs:
-        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible:
-            voting: false
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible
+    gate:
+      jobs:
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible
 
 - project:
     templates:
