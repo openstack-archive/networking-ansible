@@ -69,8 +69,8 @@
         TENANT_VLAN_RANGE: 100:150
         VIRT_DRIVER: ironic
       devstack_plugins:
-        ironic: git://git.openstack.org/openstack/ironic
-        networking-ansible: git://git.openstack.org/openstack/networking-ansible
+        ironic: https://git.openstack.org/openstack/ironic
+        networking-ansible: https://git.openstack.org/openstack/networking-ansible
       zuul_copy_output:
         '{{ devstack_base_dir }}/ironic-bm-logs': 'logs'
       devstack_services:
