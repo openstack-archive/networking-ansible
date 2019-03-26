@@ -13,7 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron.plugins.ml2.common import exceptions as ml2_exc
+from neutron_lib._i18n import _
+from neutron_lib import exceptions
 
-class AnsibleRunnerException(Exception):
+
+class NetworkingAnsibleMechException(ml2_exc.MechanismDriverError):
     def __init__(self, message):
-        super(AnsibleRunnerException, self).__init__(message)
+        super(NetworkingAnsibleMechException, self).__init__(message)
+
+
+class LocalLinkInfoMissingException(exceptions.NeutronException):
+    message = _('%(stdout)s')
+
+    def __init__(self, message):
+        super(LocalLinkInfoMissingException, self).__init__(stdout=message)
