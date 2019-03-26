@@ -21,41 +21,46 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-def build_ansible_inventory():
-    """Get inventory list from config files
-
-    returns python dict representing ansible inventory
-    according to ansible inventory file yaml definition
-    http://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
-    """
-    # TODO(radez): consider take advantage of ansible inventory grouping
+class Config(object):
 
     driver_tag = 'ansible:'
     booleans = ['manage_vlans']
-    inventory = {}
 
-    for conffile in CONF.config_file:
-        # parse each config file
-        sections = {}
-        parser = cfg.ConfigParser(conffile, sections)
-        try:
-            parser.parse()
-        except IOError as e:
-            LOG.error(str(e))
+    def __init__(self):
+        """Get inventory list from config files
 
-        # filter out sections that begin with the driver's tag
-        hosts = {k: v for k, v in sections.items()
-                 if k.startswith(driver_tag)}
+        builds a Network-Runner inventory object
+        and a mac_map dictionary
+        according to ansible inventory file yaml definition
+        http://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+        """
+        self.inventory = {}
+        self.mac_map = {}
 
-        # munge the oslo_config data removing the device tag and
-        # turning lists with single item strings into strings
-        for host in hosts:
-            dev_id = host.partition(driver_tag)[2]
-            dev_cfg = {k: v[0] for k, v in hosts[host].items()}
-            for b in booleans:
-                if b in dev_cfg:
-                    dev_cfg[b] = types.Boolean()(dev_cfg[b])
-            inventory[dev_id] = dev_cfg
+        for conffile in CONF.config_file:
+            # parse each config file
+            sections = {}
+            parser = cfg.ConfigParser(conffile, sections)
+            try:
+                parser.parse()
+            except IOError as e:
+                LOG.error(str(e))
 
-    LOG.info('Ansible Host List: %s', ', '.join(inventory))
-    return {'all': {'hosts': inventory}}
+            # filter out sections that begin with the driver's tag
+            hosts = {k: v for k, v in sections.items()
+                     if k.startswith(self.driver_tag)}
+
+            # munge the oslo_config data removing the device tag and
+            # turning lists with single item strings into strings
+            for host in hosts:
+                dev_id = host.partition(self.driver_tag)[2]
+                dev_cfg = {k: v[0] for k, v in hosts[host].items()}
+                for b in self.booleans:
+                    if b in dev_cfg:
+                        dev_cfg[b] = types.Boolean()(dev_cfg[b])
+                self.inventory[dev_id] = dev_cfg
+                # If mac is defined add it to the mac_map
+                if 'mac' in dev_cfg:
+                    self.mac_map[dev_cfg['mac'].upper()] = dev_id
+
+        LOG.info('Ansible Host List: %s', ', '.join(self.inventory))
