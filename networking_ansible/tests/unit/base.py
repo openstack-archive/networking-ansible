@@ -38,6 +38,12 @@ def patch_neutron_quotas():
         mock.patch(func).start()
 
 
+class MockConfig(object):
+    def __init__(self, host=None, mac=None):
+        self.inventory = {host: {'mac': mac}} if host and mac else {}
+        self.mac_map = {}
+
+
 class BaseTestCase(base.BaseTestCase):
     test_config_files = []
     parse_config = True
@@ -53,16 +59,8 @@ class BaseTestCase(base.BaseTestCase):
         # using lowercase to ensure case sensitivity is handled correctly
         # the code applys upper() to everything
         self.testmac = '01:23:45:67:89:ab'
-        self.empty_inventory = {'all': {'hosts': {}}}
-        self.inventory = {
-            'all': {
-                'hosts': {
-                    self.testhost: {
-                        'mac': self.testmac
-                    }
-                }
-            }
-        }
+
+        self.m_config = MockConfig(self.testhost, self.testmac)
 
     def setup_config(self):
         """Create the default configurations."""
@@ -79,8 +77,9 @@ class NetworkingAnsibleTestCase(BaseTestCase):
     def setUp(self):
         patch_neutron_quotas()
         super(NetworkingAnsibleTestCase, self).setUp()
-        with mock.patch('networking_ansible.ml2.mech_driver.config') as m_cfg:
-            m_cfg.build_ansible_inventory.return_value = self.inventory
+        config_module = 'networking_ansible.ml2.mech_driver.config.Config'
+        with mock.patch(config_module) as m_cfg:
+            m_cfg.return_value = self.m_config
             self.mech = mech_driver.AnsibleMechanismDriver()
             self.mech.initialize()
         self.testsegid = '37'
