@@ -41,45 +41,46 @@ class MockedConfigParser(mock.Mock):
         pass
 
 
-class TestBuildAnsibleInventory(base.BaseTestCase):
+class TestConfig(base.BaseTestCase):
     parse_config = False
 
-    def test_build_ansible_inventory_empty_hosts(self):
+    def test_config_empty_hosts(self):
         self.test_config_files = []
         self.setup_config()
 
-        self.assertEqual(self.empty_inventory,
-                         self.ansconfig.build_ansible_inventory())
+        self.assertEqual({}, self.ansconfig.Config().inventory)
+        self.assertEqual({}, self.ansconfig.Config().mac_map)
 
     @mock.patch('networking_ansible.config.LOG')
     @mock.patch('networking_ansible.config.cfg.ConfigParser')
-    def test_build_ansible_inventory_parser_error(self, mock_parser, mock_log):
+    def test_config_parser_error(self, mock_parser, mock_log):
         self.test_config_files = ['/etc/foo.conf']
         self.setup_config()
 
         mock_parser().parse.side_effect = IOError()
-        self.assertEqual(self.empty_inventory,
-                         self.ansconfig.build_ansible_inventory())
+        self.assertEqual({}, self.ansconfig.Config().inventory)
+        self.assertEqual({}, self.ansconfig.Config().mac_map)
         mock_log.error.assert_called()
 
     @mock.patch('networking_ansible.config.cfg.ConfigParser',
                 MockedConfigParser)
-    def test_build_ansible_inventory_w_hosts(self):
+    def test_config_w_hosts(self):
         self.test_config_files = ['foo']
         self.setup_config()
 
-        self.assertEqual(self.inventory,
-                         self.ansconfig.build_ansible_inventory())
+        self.assertEqual(self.m_config.inventory,
+                         self.ansconfig.Config().inventory)
+        self.assertEqual({'01:23:45:67:89:AB': 'testhost'},
+                         self.ansconfig.Config().mac_map)
 
     @mock.patch('networking_ansible.config.cfg.ConfigParser',
                 MockedConfigParser)
-    def test_build_ansible_inventory_from_file(self):
+    def test_config_from_file(self):
         self.test_config_files = ['foo2']
         self.setup_config()
 
-        ansible_inventory = self.ansconfig.build_ansible_inventory()
-
-        hosts = ansible_inventory['all']['hosts']
+        hosts = self.ansconfig.Config().inventory
         self.assertEqual({'manage_vlans': False}, hosts['h1'])
         self.assertEqual({'manage_vlans': True}, hosts['h2'])
         self.assertEqual({'manage_vlans': False}, hosts['h3'])
+        self.assertEqual({}, self.ansconfig.Config().mac_map)

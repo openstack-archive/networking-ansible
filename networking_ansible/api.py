@@ -15,12 +15,16 @@
 
 import ansible_runner
 import logging
+import warnings
 
+from debtcollector import removals
 from networking_ansible import exceptions
 
 LOG = logging.getLogger(__name__)
+warnings.simplefilter('always')
 
 
+@removals.removed_class("NetworkingAnsible")
 class NetworkingAnsible(object):
     """Object to invoke ansible_runner to call Ansible Networking
 
