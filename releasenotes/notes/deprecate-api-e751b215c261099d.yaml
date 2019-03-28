@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    api.NetworkingAnsible is deprecated. Network-Runner should be used instead of 
+    the networking-ansible API.
