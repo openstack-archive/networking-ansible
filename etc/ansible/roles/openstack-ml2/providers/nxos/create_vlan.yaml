@@ -1,9 +1,0 @@
----
-- name: "nxos: run create vlan using network_cli"
-  nxos_config:
-    lines:
-      - "name {{ _vlan_name }}"
-    parents:
-      - "vlan {{ _vlan_id }}"
-  connection: network_cli
-
